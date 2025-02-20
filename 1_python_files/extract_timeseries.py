@@ -6,7 +6,7 @@ from datetime import datetime
 
 def extract_strains(start_time, end_time, loop, pos, col):
 
-    main_path = 'GÄB'
+    main_path = '../0_GAB'
 
     # List all subfolders in the main folder
     subfolders = [
@@ -62,7 +62,7 @@ def extract_strains(start_time, end_time, loop, pos, col):
         df_strains = pd.concat([df_strains, row], ignore_index=True) #add the new row to the dataframe
 
     # Define the relative path for saving the CSV file
-    output_folder = "strain_csv"
+    output_folder = "../timeseries_csv"
     os.makedirs(output_folder, exist_ok=True)  # Create the folder if it doesn't exist
     output_csv = os.path.join(output_folder, f"{loop}_{pos}_{start_time}-{end_time}.csv")
 
@@ -72,15 +72,7 @@ def extract_strains(start_time, end_time, loop, pos, col):
     return df_strains
 
 default_start_time = '20090605000000' #First timestamp
-default_end_time = '20210611160000' #Last timestamp
-# default_start_time = '2009-06-05 00:00:00' #First timestamp
-# default_end_time = '2021-06-11 16:00:00' #Last timestamp
-
-# df_loops = pd.read_csv('file_counts.txt', delimiter='\t', header=None)
-# # Filter the rows where column 0 starts with 'EI'
-# df_filtered = df_loops[df_loops[0].str.startswith('EI')]
-# loops = df_filtered[0].tolist()
-
+default_end_time = '20210611160000' #Last timestampmp
 
     # Function to get the start date and time input with 'd' for default and 'c' for custom
 def get_start_input(prompt):
@@ -91,17 +83,8 @@ def get_start_input(prompt):
         return default_start_time
     elif user_input == 'c':
         # Custom date-time input from user
-        custom_start_time = input("Enter date and time in format 'YYYYMMDDHH0000': ")
+        custom_start_time = input("Enter date and time in format 'YYYYMMDDHH0000': ").strip()
         return custom_start_time
-        # custom_input = input("Enter date and time in format 'YYYYMMDDHH0000': ").strip()
-        # try:
-        #     # Validate custom date-time format
-        #     custom_end_time = datetime.strptime(custom_input, '%Y-%m-%d %H:%M:%S')
-        #     print(f"Using custom date-time: {custom_end_time}")
-        #     return custom_end_time
-        # except ValueError:
-        #     print("Invalid format! Please use 'YYYYMMDDHH0000'.")
-        #     return get_start_input(prompt)  # Recurse if invalid format
     else:
         print("Invalid input! Please press 'd' or 'c'.")
         return get_start_input(prompt)  # Recurse if invalid input
@@ -115,25 +98,13 @@ def get_end_input(prompt):
         return default_end_time
     elif user_input == 'c':
         # Custom date-time input from user
-        custom_end_time = input("Enter date and time in format 'YYYYMMDDHH0000': ")
+        custom_end_time = input("Enter date and time in format 'YYYYMMDDHH0000': ").strip()
         return custom_end_time
-        # custom_input = input("Enter date and time in format 'YYYYMMDDHH0000': ").strip()
-        # try:
-        #     # Validate custom date-time format
-        #     custom_end_time = datetime.strptime(custom_input, '%Y-%m-%d %H:%M:%S')
-        #     print(f"Using custom date-time: {custom_end_time}")
-        #     return custom_end_time
-        # except ValueError:
-        #     print("Invalid format! Please use 'YYYYMMDDHH0000'.")
-        #     return get_start_input(prompt)  # Recurse if invalid format
     else:
         print("Invalid input! Please press 'd' or 'c'.")
         return get_start_input(prompt)  # Recurse if invalid input
     
     
-    
-    
-
 # Input Section
 print("\nStart Date-Time Input:")
 start_time = get_start_input("Enter the start date and time")
@@ -154,3 +125,5 @@ col = int(col)
 print(f"Column: {col}")
 
 extract_strains(start_time, end_time, loop, pos, col)
+
+#kan lägga till så att den accepterar input av en textfil med alla loops och positioner som ska köras
