@@ -19,6 +19,7 @@ def extract_strains(start_time, end_time, loop, pos, col):
         df_strains: A dataframe that contains timeseries of the strains for the given timespan, loop, and position. Saves the dataframe as a .csv. 
     """
 
+
     main_path = '../0_GAB'
 
     # List all subfolders in the main folder
