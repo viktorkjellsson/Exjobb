@@ -109,21 +109,24 @@ def get_end_input(prompt):
 print("\nStart Date-Time Input:")
 start_time = get_start_input("Enter the start date and time")
 print(f"\nStart date-time: {start_time}")
+print(type(start_time))
 
 print("\nEnd Date-Time Input:")
 end_time = get_end_input("Enter the end date and time")
 print(f"End date-time: {end_time}")
+print(type(end_time))
 
 loop = input("Enter the name of the loop (e.g., EI_N-B-Close_Comp.txt): ")
 print(f"Loop: {loop}")
+print(type(loop))
 
 pos = input("Enter the position (e.g., N13, B, 12.64): ")
 print(f"Position: {pos}")
+print(type(pos))
 
 col = input("Enter the column: ")
 col = int(col)
 print(f"Column: {col}")
+print(type(col))
 
 extract_strains(start_time, end_time, loop, pos, col)
-
-#kan lägga till så att den accepterar input av en textfil med alla loops och positioner som ska köras
