@@ -1,6 +1,7 @@
 """
 Handles the shift along the y-axis and scale change after an interruption by translating each segment 
-to a common baseline and scaling each segment to allign the data to a common range. 
+to a common baseline and scaling each segment to allign the data to a common range.
+ 
 """
 from sklearn.preprocessing import MinMaxScaler
 import numpy as np

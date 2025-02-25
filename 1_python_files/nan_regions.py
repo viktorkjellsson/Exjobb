@@ -1,6 +1,7 @@
 import pandas as pd
 
 def find_nan_regions(df, threshold):
+    
     """
     Find regions with more than 'threshold' consecutive NaNs in the 'Strain' column of the DataFrame.
 
