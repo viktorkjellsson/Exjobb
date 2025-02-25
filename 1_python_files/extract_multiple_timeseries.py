@@ -84,8 +84,25 @@ def extract_strains(start_time, end_time, loop, pos, col):
 
     # Define the relative path for saving the CSV file
     output_folder = "../timeseries_csv"
-    os.makedirs(output_folder, exist_ok=True)  # Create folder if it doesn't exist
-    output_csv = os.path.join(output_folder, f"{loop}_{pos}_{start_time}-{end_time}.csv")
+
+    # Prompt the user for input to select between default or custom subfolder
+    folder_choice = input("Type 'd' for default subfolder or 'c' for custom subfolder: ").strip().lower()
+
+    # Check user input and determine the subfolder
+    if folder_choice == 'd':
+        subfolder = ""  # Default: no subfolder
+    elif folder_choice == 'c':
+        subfolder = input("Enter the name of the custom subfolder: ").strip()
+        os.makedirs(os.path.join(output_folder, subfolder), exist_ok=True)  # Create subfolder if it doesn't exist
+    else:
+        print("Invalid choice. Defaulting to the main output folder.")
+        subfolder = ""  # Default to no subfolder if invalid input
+
+    # Create the full output path including the subfolder
+    output_csv = os.path.join(output_folder, subfolder, f"{loop}_{pos}_{start_time}-{end_time}.csv")
+
+    # Ensure the output directory exists
+    os.makedirs(os.path.dirname(output_csv), exist_ok=True)
 
     # Save the DataFrame to a CSV file
     df_strains.to_csv(output_csv, index=False)
