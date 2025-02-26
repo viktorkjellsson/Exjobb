@@ -8,11 +8,15 @@ def extract_strains(start_time, end_time, loop, pos, col):
 
     main_path = '../0_GAB'
 
-    # List all subfolders in the main folder
-    subfolders = [
-        name for name in os.listdir(main_path)
-        if os.path.isdir(os.path.join(main_path, name)) and name.isdigit()  # Check if folder name is a number
-    ]
+    # # List all subfolders in the main folder
+    # subfolders = [
+    #     name for name in os.listdir(main_path)
+    #     if os.path.isdir(os.path.join(main_path, name)) and name.isdigit()  # Check if folder name is a number
+    # ]
+    # Read the folder names from the text file
+    file_path = 'txt/timestamps.txt'
+    with open(file_path, 'r') as file:
+        subfolders = [line.strip() for line in file.readlines() if line.strip().isdigit()]
 
     # Find the indexes of the start and end subfolders
     try:

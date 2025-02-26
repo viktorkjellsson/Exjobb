@@ -124,6 +124,7 @@ print(f"\nFile: {file}" if file else "\nNo file selected.")
 
 if file:
     df_args = pd.read_csv(file, header=None, sep=' ')
+    print(df_args)
     df_args[3] = df_args[3].astype(str) + ' ' + df_args[4].astype(str) + ' ' + df_args[5].astype(str)
     df_args = df_args.drop([4, 5], axis=1)
     df_args[0] = df_args[0].astype(str)
