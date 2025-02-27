@@ -2,7 +2,7 @@ import numpy as np
 import nan_regions #nan_regions.py
 import interpolate_nan #interpolate_nan.py
 
-def clean_zeros_outliers_interpolate(df, interpolate):
+def clean_zeros_outliers_interpolate(df, interpolate_threshold):
 
     #Find values of strain that are exactly zero
     df_zero = df[df["Strain"] == 0]
@@ -38,11 +38,10 @@ def clean_zeros_outliers_interpolate(df, interpolate):
 
     # Replace extreme outliers with NaN
     df.loc[mild_outlier_indices, 'Strain'] = np.nan  # Using np.nan to replace the outlier values
-    print(f'Number of outliers replaced with NaN: {len(interpolate_threshold)}')
+    print(f'Number of outliers replaced with NaN: {len(mild_outlier_indices)}')
 
     consecutive_nan_regions, nan_regions_sorted = nan_regions.find_nan_regions(df, threshold=1)
 
-    interpolate_threshold = 6
     df_filled = interpolate_nan.interpolate(df, nan_regions_sorted, interpolate_threshold)
     df = df_filled
 
