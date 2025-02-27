@@ -12,7 +12,7 @@ def clean_zeros_outliers_interpolate(df, interpolate_threshold):
     df = df.copy()
     df.loc[df["Strain"] == 0, "Strain"] = np.nan
 
-        # Compute IQR
+    # Compute IQR
     Q1 = df['Strain'].quantile(0.25)  # 25th percentile
     Q3 = df['Strain'].quantile(0.75)  # 75th percentile
     IQR = Q3 - Q1

@@ -22,21 +22,22 @@ def extract_strains(start_time, end_time, loop, pos, col):
 
     main_path = '../0_GAB'
 
-    # List all subfolders in the main folder
-    subfolders = [
-        name for name in os.listdir(main_path)
-        if os.path.isdir(os.path.join(main_path, name)) and name.isdigit()  # Check if folder name is a number
-    ]
-
-    # Initialize variable to avoid UnboundLocalError
-    subfolder_relative_paths = []
+    # # List all subfolders in the main folder
+    # subfolders = [
+    #     name for name in os.listdir(main_path)
+    #     if os.path.isdir(os.path.join(main_path, name)) and name.isdigit()  # Check if folder name is a number
+    # ]
+    # Read the folder names from the text file
+    file_path = 'txt/timestamps.txt'
+    with open(file_path, 'r') as file:
+        subfolders = [line.strip() for line in file.readlines() if line.strip().isdigit()]
 
     # Find the indexes of the start and end subfolders
     try:
         start_index = subfolders.index(start_time)
         end_index = subfolders.index(end_time)
 
-        # Extract subfolders between the start and end subfolder (inclusive)
+        # Extract subfolders between the start and end subfolder (exclusive)
         subfolders_between = subfolders[start_index:end_index + 1]
         
         # Generate relative paths from the main folder
@@ -82,22 +83,6 @@ def extract_strains(start_time, end_time, loop, pos, col):
         row = pd.DataFrame([[subfolder, time, strain]], columns=columns)  # Create new row with data
         df_strains = pd.concat([df_strains, row], ignore_index=True)  # Append new row to dataframe
 
-    # Define the relative path for saving the CSV file
-    output_folder = "../timeseries_csv"
-
-    # Prompt the user for input to select between default or custom subfolder
-    folder_choice = input("Type 'd' for default subfolder or 'c' for custom subfolder: ").strip().lower()
-
-    # Check user input and determine the subfolder
-    if folder_choice == 'd':
-        subfolder = ""  # Default: no subfolder
-    elif folder_choice == 'c':
-        subfolder = input("Enter the name of the custom subfolder: ").strip()
-        os.makedirs(os.path.join(output_folder, subfolder), exist_ok=True)  # Create subfolder if it doesn't exist
-    else:
-        print("Invalid choice. Defaulting to the main output folder.")
-        subfolder = ""  # Default to no subfolder if invalid input
-
     # Create the full output path including the subfolder
     output_csv = os.path.join(output_folder, subfolder, f"{loop}_{pos}_{start_time}-{end_time}.csv")
 
@@ -121,6 +106,22 @@ def get_file_input(prompt):
 print("\nFile input:")
 file = get_file_input("Enter the name of the file (or select from explorer)")
 print(f"\nFile: {file}" if file else "\nNo file selected.")
+
+# Define the relative path for saving the CSV file
+output_folder = "../timeseries_csv"
+
+# Prompt the user for input to select between default or custom subfolder
+folder_choice = input("Type 'd' for default subfolder or 'c' for custom subfolder: ").strip().lower()
+
+# Check user input and determine the subfolder
+if folder_choice == 'd':
+    subfolder = ""  # Default: no subfolder
+elif folder_choice == 'c':
+    subfolder = input("Enter the name of the custom subfolder: ").strip()
+    os.makedirs(os.path.join(output_folder, subfolder), exist_ok=True)  # Create subfolder if it doesn't exist
+else:
+    print("Invalid choice. Defaulting to the main output folder.")
+    subfolder = ""  # Default to no subfolder if invalid input
 
 if file:
     df_args = pd.read_csv(file, header=None, sep=' ')
