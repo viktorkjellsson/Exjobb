@@ -84,7 +84,7 @@ def extract_strains(start_time, end_time, loop, pos, col):
         df_strains = pd.concat([df_strains, row], ignore_index=True)  # Append new row to dataframe
 
     # Create the full output path including the subfolder
-    output_csv = os.path.join(output_folder, subfolder, f"{loop}_{pos}_{start_time}-{end_time}.csv")
+    output_csv = os.path.join(output_folder, folder, f"{loop}_{pos}_{start_time}-{end_time}.csv")
 
     # Ensure the output directory exists
     os.makedirs(os.path.dirname(output_csv), exist_ok=True)
@@ -115,13 +115,13 @@ folder_choice = input("Type 'd' for default subfolder or 'c' for custom subfolde
 
 # Check user input and determine the subfolder
 if folder_choice == 'd':
-    subfolder = ""  # Default: no subfolder
+    folder = ""  # Default: no subfolder
 elif folder_choice == 'c':
-    subfolder = input("Enter the name of the custom subfolder: ").strip()
-    os.makedirs(os.path.join(output_folder, subfolder), exist_ok=True)  # Create subfolder if it doesn't exist
+    folder = input("Enter the name of the custom subfolder: ").strip()
+    os.makedirs(os.path.join(output_folder, folder), exist_ok=True)  # Create subfolder if it doesn't exist
 else:
     print("Invalid choice. Defaulting to the main output folder.")
-    subfolder = ""  # Default to no subfolder if invalid input
+    folder = ""  # Default to no subfolder if invalid input
 
 if file:
     df_args = pd.read_csv(file, header=None, sep=' ')
