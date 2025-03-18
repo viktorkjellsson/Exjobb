@@ -5,7 +5,7 @@ from pathlib import Path
 # =============================
 
 # Define base project directory using Path
-BASE_DIR = Path(__file__).resolve().parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 print(BASE_DIR)
 
 # Data directories
