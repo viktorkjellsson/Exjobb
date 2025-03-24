@@ -41,9 +41,9 @@ def clean_zeros_outliers_interpolate(df, interpolate_threshold):
     df.loc[mild_outlier_indices, 'Strain'] = np.nan  # Using np.nan to replace the outlier values
     print(f'Number of outliers replaced with NaN: {len(mild_outlier_indices)}')
 
-    consecutive_nan_regions, nan_regions_sorted = nan_regions.find_nan_regions(df, threshold=1)
+    # consecutive_nan_regions, nan_regions_sorted = nan_regions.find_nan_regions(df, threshold=1)
 
-    df_filled = interpolate_nan.interpolate(df, nan_regions_sorted, interpolate_threshold)
-    df = df_filled
+    # df_filled = interpolate_nan.interpolate(df, nan_regions_sorted, interpolate_threshold)
+    # df = df_filled
 
     return df
