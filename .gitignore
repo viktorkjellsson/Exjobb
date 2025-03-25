@@ -1,6 +1,5 @@
-0_GAB/
-GAB_extras/
-skit/
-~$file-format-old_new-from DP_v2.xlsx
-1_python_files/txt/filelist.txt
-timeseries_csv/
+data/raw
+data/GAB_extras
+notebooks/txt
+configs/txt_configs/filelist.txt
+configs/__pycache__/path_config.cpython-312.pyc
