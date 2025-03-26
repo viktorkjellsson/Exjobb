@@ -23,8 +23,6 @@ def shift_scale_diff(df, std_multiplier, n_points_prev, n_points_curr, min_regio
         prev_start_idx, prev_end_idx = consecutive_valid_regions[i - 1]
         start_idx, end_idx = consecutive_valid_regions[i]
 
-        print(df.loc[start_idx:end_idx, 'Strain'])
-
         # Apply the total accumulated shift to the current region at the start
         df.loc[start_idx:end_idx, 'Strain'] += total_shift  
 
