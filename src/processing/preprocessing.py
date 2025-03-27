@@ -1,5 +1,5 @@
-import numpy as np
 
+import numpy as np
 from src.processing import remove_outliers
 from src.processing import nan_regions #nan_regions.py
 from src.processing import shift_region
@@ -11,8 +11,10 @@ def preprocessing_pipeline(df):
     df = remove_outliers.clean_zeros_outliers(df)
 
     # Find consecutive NaN regions
-    threshold = 5 # Choose the threshold(s) for consecutive NaNs
+    threshold = 1 # Choose the threshold(s) for consecutive NaNs
     consecutive_nan_regions, nan_regions_sorted = nan_regions.find_nan_regions(df, threshold)
+
+    print(nan_regions_sorted)
 
     # Shift regions 
     n_points = 15
@@ -24,9 +26,9 @@ def preprocessing_pipeline(df):
     # Interpolate NaN regions shorter than the threshold
     interpolate_threshold = 5
 
-    df_interpolated = interpolate_nan.interpolate(df, nan_regions_sorted, interpolate_threshold)
+    df_filled = interpolate_nan.interpolate(df, nan_regions_sorted, interpolate_threshold)
 
-    df = df_interpolated
+    df = df_filled
 
     # Add function that scales the data here
     # df = scale_data(df)
