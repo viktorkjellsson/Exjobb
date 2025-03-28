@@ -19,18 +19,21 @@ def preprocessing_pipeline(df):
     # Shift regions 
     n_points = 15
     std_multiplier = 4.6
-    min_region_size = 5
 
-    df = shift_region.shift_scale_diff(df, std_multiplier, n_points, n_points, min_region_size)
+    df = shift_region.shift_scale_diff(df, std_multiplier, n_points, n_points, min_region_size=5)
 
     # Interpolate NaN regions shorter than the threshold
-    interpolate_threshold = 5
+    ''' 
+    Test if kalman filtering and LAR can be used to impute values instead of linear interpolation
+    
+    '''
+    # interpolate_threshold = 5
 
-    df_filled = interpolate_nan.interpolate(df, nan_regions_sorted, interpolate_threshold)
+    # df_filled = interpolate_nan.interpolate(df, nan_regions_sorted, interpolate_threshold)
 
-    df = df_filled
+    # df = df_filled
 
     # Add function that scales the data here
     # df = scale_data(df)
 
-    return df
+    return df, nan_regions_sorted
