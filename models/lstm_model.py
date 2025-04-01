@@ -19,14 +19,11 @@ class LSTMModel(nn.Module):
         self.fc = nn.Linear(hidden_dim, input_dim)
 
     def forward(self, x):
-        # print(f"Input to LSTM (x) shape: {x.shape}")
         lstm_out, _ = self.lstm(x)
-        # print(f"Output from LSTM (lstm_out) shape: {lstm_out.shape}")
         prediction = self.fc(lstm_out[:, -1, :])
-        # print(f"Output from Fully Connected Layer (prediction) shape: {prediction.shape}")
         return prediction
     
-def training_loop(model, train_loader, num_epochs, learning_rate, log_dir=OUTPUT_DIR/'logs'): #print_every=10
+def training_loop(model, train_loader, num_epochs, learning_rate, log_dir=OUTPUT_DIR/'logs'):
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
@@ -64,26 +61,5 @@ def training_loop(model, train_loader, num_epochs, learning_rate, log_dir=OUTPUT
     
     logger.end_timer()
     logger.save_log()
-    return losses
-
     
-# def training_loop(model, train_loader, num_epochs, learning_rate, print_every=10):
-#     criterion = nn.MSELoss()
-#     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-
-#     for epoch in range(num_epochs):
-#         model.train()
-#         epoch_loss = 0
-
-#         for batch in train_loader:
-#             # print(batch.shape)
-#             # batch = batch.unsqueeze(-1).float()
-#             optimizer.zero_grad()
-#             prediction = model(batch)
-#             loss = criterion(prediction, batch[:, -1, :])
-#             loss.backward()
-#             optimizer.step()
-
-#             epoch_loss += loss.item()
-
-#         print(f'Epoch {epoch+1}/{num_epochs}, Loss: {epoch_loss/len(train_loader)}\n')
+    return losses

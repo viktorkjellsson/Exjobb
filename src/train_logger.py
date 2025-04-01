@@ -3,6 +3,9 @@ import time
 from pathlib import Path
 
 class TrainingLogger:
+    """
+    Class that creates a logger for the training loop and that saves the parameters, duration and losses for each epoch. 
+    """
     def __init__(self, log_dir="logs"):
         self.log_dir = Path(log_dir)
         self.log_dir.mkdir(parents=True, exist_ok=True)
