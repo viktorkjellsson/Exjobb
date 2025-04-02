@@ -1,6 +1,6 @@
-import json
 import time
 from pathlib import Path
+import json
 
 class TrainingLogger:
     """
@@ -42,7 +42,11 @@ class TrainingLogger:
         """Log loss per epoch."""
         self.logs["epoch_losses"].append({"epoch": epoch + 1, "loss": loss})
 
+    # def save_log(self):
+    #     """Save logs to a .txt file."""
+    #     with open(self.log_file, "w") as f:
+    #         json.dump(self.logs, f, indent=4)
     def save_log(self):
-        """Save logs to a .txt file."""
-        with open(self.log_file, "w") as f:
-            json.dump(self.logs, f, indent=4)
+        """Save logs to a .txt file with JSON-like formatting."""
+        with open(self.log_file, "w", encoding="utf-8") as f:
+            json.dump(self.logs, f, indent=4, ensure_ascii=False)
