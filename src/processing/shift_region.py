@@ -86,7 +86,7 @@ def shift_scale_diff(df, std_multiplier, n_points_prev, n_points_curr, min_regio
 
         headers = ["Start time", "End time", "Previous Mean", "Previous Std", "Lower Bound", "Upper Bound", "Current Mean", "Delta Shift", "Total Shift"]
         df_output = pd.DataFrame(table_data, columns=headers)
-        print(df_output.to_string(index=False))  # Print table without row index
+        # print(df_output.to_string(index=False))  # Print table without row index
 
     return df
 
