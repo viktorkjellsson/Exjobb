@@ -45,9 +45,9 @@ def training_loop(model, train_loader, num_epochs, learning_rate, print_every=10
 
         print(f"\nEpoch {epoch+1}/{num_epochs}, Average Loss: {losses[epoch]:.4f}\n")
 
-    return losses
+    return losses, predlossesiction
 
-def plot_train()
+
     
 # def training_loop(model, train_loader, num_epochs, learning_rate, print_every=10):
 #     criterion = nn.MSELoss()
