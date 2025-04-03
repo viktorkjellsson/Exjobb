@@ -12,7 +12,7 @@ from configs.path_config import BASE_DIR, EXTRACTED_DATA_DIR, RAW_DATA_DIR
 
 def get_subfolder_list(start_time, end_time):
     """Retrieve a list of subfolders between the specified timestamps."""
-    file_path = BASE_DIR / "configs" / "txt_configs" / "timestamps_04.txt"
+    file_path = BASE_DIR / "configs" / "txt_configs" / "timestamps.txt"
 
     with file_path.open('r') as file:
         subfolder_list = [line.strip() for line in file.readlines() if line.strip().isdigit()]
