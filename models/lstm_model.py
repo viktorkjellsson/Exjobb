@@ -7,7 +7,7 @@ from pathlib import Path
 # Add the root project directory to the Python path
 ROOT = Path.cwd().parent  # This will get the project root since the notebook is in 'notebooks/'
 sys.path.append(str(ROOT))
-from configs.path_config import OUTPUT_DIR
+from configs.path_config import OUTPUT_DIR, WEIGHTS_DIR
 from src.train_logger import TrainingLogger
 
 
@@ -61,5 +61,9 @@ def training_loop(model, train_loader, num_epochs, learning_rate, log_dir=OUTPUT
     
     logger.end_timer()
     logger.save_log()
+
+    savepath =  WEIGHTS_DIR / 'weights.pth'
+    torch.save(model, savepath)
     
     return losses
+    
