@@ -32,7 +32,7 @@ def plot_lstm_results(train_data, prediction, timestamps):
 
     fig.show()
 
-def plot_reconstruction(dataset, model, N, feature_names=None, ncol=3):
+def plot_reconstruction(dataset, model, N, feature_names, ncol=3):
     """
     Plot true vs reconstructed values for every feature over N steps using subplots.
 
