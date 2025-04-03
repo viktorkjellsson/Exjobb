@@ -65,5 +65,5 @@ def training_loop(model, train_loader, num_epochs, learning_rate, log_dir=OUTPUT
     savepath =  WEIGHTS_DIR / 'weights.pth'
     torch.save(model, savepath)
     
-    return losses
+    return losses, prediction 
     
