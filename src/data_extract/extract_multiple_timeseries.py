@@ -32,18 +32,44 @@ def read_strain_value(file_path, pos, col):
     """Read strain value from the specified file, given the position and column index."""
     try:
         df = pd.read_csv(file_path, delimiter='\t', header=None)
+        df[0] = df[0].str.replace(' ', '', regex=False)
+        # df = pd.read_csv(file_path, sep = r'[,\s]+', header=None)
 
         if col >= len(df.columns):
             print(f"Invalid column number in {file_path.name}.")
             return np.nan
 
         matching_row = df[df[0] == pos]
-        return matching_row.iloc[0, col] if not matching_row.empty else np.nan
+        strain = matching_row.iloc[0, col]
+        return strain #if not matching_row.empty else np.nan
 
     except FileNotFoundError:
         print(f"File not found: {file_path}")
         return np.nan
 
+
+# def extract_strains(start_time, end_time, loop, pos, col, folder):
+#     """
+#     Extracts strain data for the given time range, loop, and position and saves it as a CSV.
+#     """
+#     subfolders = get_subfolder_list(start_time, end_time)
+#     if not subfolders:
+#         return None
+
+#     df_strains = pd.DataFrame(columns=['Time_index', 'Time', 'Strain'])
+
+#     for subfolder in subfolders:
+#         file_path = RAW_DATA_DIR / subfolder / loop
+#         strain = read_strain_value(file_path, pos, col)
+#         time = pd.to_datetime(subfolder, format="%Y%m%d%H%M%S")
+#         df_strains = pd.concat([df_strains, pd.DataFrame([[subfolder, time, strain]], columns=df_strains.columns)])
+
+#     output_dir = EXTRACTED_DATA_DIR / folder
+#     output_dir.mkdir(parents=True, exist_ok=True)
+#     output_csv_path = output_dir / f"{loop}_{pos}_{start_time}-{end_time}.csv"
+
+#     df_strains.to_csv(output_csv_path, index=False)
+#     return df_strains
 
 def extract_strains(start_time, end_time, loop, pos, col, folder):
     """
@@ -58,7 +84,13 @@ def extract_strains(start_time, end_time, loop, pos, col, folder):
     for subfolder in subfolders:
         file_path = RAW_DATA_DIR / subfolder / loop
         strain = read_strain_value(file_path, pos, col)
+        if np.isnan(strain):
+            print(f"Strain is NaN for {subfolder} ({pos}, {col}).")
+        else:
+            print(f"Strain value for {subfolder}: {strain}")
+
         time = pd.to_datetime(subfolder, format="%Y%m%d%H%M%S")
+        # Check if strain is valid before appending
         df_strains = pd.concat([df_strains, pd.DataFrame([[subfolder, time, strain]], columns=df_strains.columns)])
 
     output_dir = EXTRACTED_DATA_DIR / folder
@@ -89,6 +121,8 @@ if file:
     df_args[3] = df_args[3].astype(str) + ' ' + df_args[4].astype(str) + ' ' + df_args[5].astype(str)
     df_args = df_args.drop(columns=[4, 5])
     df_args.columns = ['start_time', 'end_time', 'loop', 'pos', 'col']
+    df_args['pos'] = df_args['pos'].str.replace(' ', '', regex=False)
+    print(df_args)
 
     for _, row in df_args.iterrows():
         extract_strains(row['start_time'], row['end_time'], row['loop'], row['pos'], row['col'], custom_folder)
