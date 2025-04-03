@@ -1,0 +1,37 @@
+
+##  N-B_Far_Comp.txt_N13, B, 0.03.csv  ##
+
+No need to shift
+
+
+##  N-B_Mid1_Comp.txt_N5, B, 0.02.csv  ##
+
+n_points = 15
+std_multiplier = 4   (4.6 works aswell)
+min_region_size = 5
+
+
+##  N-B_Mid2_Comp.txt_N10, B, 0.11.csv  ##
+
+n_points = 15
+std_multiplier = 4.6
+min_region_size = 5
+
+
+##  N-B-Close_Comp.txt_IX, B, 0.04.csv  ##
+
+n_points = 15
+std_multiplier = 4.0
+min_region_size = 5
+
+
+##  N-C_Far_Comp.txt_N13, C, 0.03.csv  ##
+
+Stökig data, göra manuellt
+Kommentera det i rapporten att det är ok att göra manuellt. Kanske inte applicerbart om man har större mängder dat eller fler kanaler.
+
+
+##  N-C_Mid_Comp.txt_N10, C, 0.04.csv  ##
+
+
+
