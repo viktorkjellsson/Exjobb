@@ -10,7 +10,7 @@ def clean_zeros_outliers(df):
 
     #Find values of strain that are exactly zero
     df_zero = df[df["Strain"] == 0]
-    print(f'{df_zero.shape[0]} zeros to replace with NaN')
+    # print(f'{df_zero.shape[0]} zeros to replace with NaN')
 
     # Remove rows with strain values of zero by replacing with NaN
     df = df.copy()
@@ -37,12 +37,12 @@ def clean_zeros_outliers(df):
     num_extreme_outliers = extreme_outliers.shape[0]
 
     # Print results
-    print(f'Number of mild outliers (1.5 × IQR): {num_mild_outliers}')
-    print(f'Number of extreme outliers (3 × IQR): {num_extreme_outliers}')
+    # print(f'Number of mild outliers (1.5 × IQR): {num_mild_outliers}')
+    # print(f'Number of extreme outliers (3 × IQR): {num_extreme_outliers}')
 
     # Replace extreme outliers with NaN
     df.loc[mild_outlier_indices, 'Strain'] = np.nan  # Using np.nan to replace the outlier values
-    print(f'Number of outliers replaced with NaN: {len(mild_outlier_indices)}')
+    # print(f'Number of outliers replaced with NaN: {len(mild_outlier_indices)}')
 
 
     return df

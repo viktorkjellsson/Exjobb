@@ -25,6 +25,10 @@ TXT_OUTPUT_DIR = BASE_DIR / 'output' / 'txt'
 # Configuration directories
 CONFIG_DIR = BASE_DIR / 'configs'
 
+# Model directories
+MODEL_DIR = BASE_DIR / 'models'
+WEIGHTS_DIR = MODEL_DIR / 'weights'
+
 # =============================
 # Loop configurations
 # =============================
