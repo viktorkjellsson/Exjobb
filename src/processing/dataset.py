@@ -15,6 +15,7 @@ from src.processing import preprocessing
 class StrainDataset(Dataset):
     def __init__(self, root, group, sequence_length, test_size=0.2):
         self.sequences = []
+        self.timestamps = []
 
         multivariate_data = []
         # Load and process each file
@@ -22,6 +23,7 @@ class StrainDataset(Dataset):
             path = EXTRACTED_DATA_DIR / 'group1a' / file
             df = pd.read_csv(path)
             df = df.iloc[12216:-1]
+            self.timestamps.append(df["Time"].values)  # Store timestamps before processing
             processed_df = preprocessing.preprocessing_pipeline(df)
             strain_series = processed_df["Strain"].fillna(0)
             multivariate_data.append(strain_series)
@@ -42,6 +44,9 @@ class StrainDataset(Dataset):
         # Define DataLoaders
         self.train_dataloader = DataLoader(self.train_data, batch_size=32, shuffle=True)
         self.test_dataloader = DataLoader(self.test_data, batch_size=32, shuffle=False)
+
+    def get_timestamps(self):
+        return self.timestamps
 
     def __len__(self):
         return len(self.train_data)  # Return length of training data
