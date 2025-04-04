@@ -1,0 +1,52 @@
+g1
+N-B-Close_Comp.txt IX, B, 0.04
+N-B_Far_Comp.txt N13, B, 0.03
+N-B_Mid1_Comp.txt N5, B, 0.02
+N-B_Mid2_Comp.txt N10, B, 0.11
+N-C_Close2_Comp.txt IX, C, 0.09
+N-C_Far_Comp.txt N13, C, 0.03
+N-C_Mid_Comp.txt N10, C, 0.04
+N-D_Close_Comp.txt IX, D, 0
+N-D_Far_Comp.txt N13, D, 0.02
+N-E_Close_Comp.txt IX, E, 0.04
+N-E_Far_Comp.txt N13, E, 0.03
+N-E_Mid1_Comp.txt N5, E, 0.03
+N-F_Close_Comp.txt IX, F, 0.04
+N-F_Mid_Comp.txt N13, F, 0.02
+N-Klaff_Comp.txt V, B, 1.65
+
+	delted g1{
+
+g2
+
+S-B_Mid1_Comp.txt S14, B, 0.08
+S-B_Mid2_Comp.txt S10, B, 0.8
+S-B_Parking_Comp.txt S25, B, 0.07
+S-D_Parking_Comp.txt S25, D, 0.09
+S-F_Mid_Comp.txt S11, F, 0.02
+S-F_Parking_Comp.txt S25, F, 0.09
+S-F_Tunnel_Comp.txt S19, F, 0.06
+
+
+	delted g2{	S-AB_Far_Comp.txt S6, A, 0.04 (inte intresserade av påfart)
+			S-DE_Far_Comp.txt S6, D, 0.01 (saknas för mycket data)
+			S-DC_Arm_Comp.txt S4, D, 0.07 (inte intresserade av påfart)
+			S-GFE_Arm_Comp.txt S3, G, 0.07 (inte intresserade av påfart)
+		
+
+g3 
+N-C_Close1_Comp.txt VIII, C, 0.06
+N-D_Mid1_r_Comp.txt N1, D, 0.02
+N-D_Mid2_r_Comp.txt N6, D, 0.02
+N-E_Mid2_Comp.txt N10, E, 0.05
+S-B_Close_Comp.txt II, B, 0.06
+S-B_Tunnel_Comp.txt S19, B, 0.06
+S-C_Close_Comp.txt II, C, 0.06
+S-C_Far_D_Mid_Comp.txt S6, C, 0.07
+S-C_Tunnel_Comp.txt S19, C, 0.06
+S-D_Close_Comp.txt II, D, 0.06
+S-D_Tunnel_E_Parking_Comp.txt S19, D, 0.06
+S-E_Close_Comp.txt I, E, 0.04
+S-E_Mid_Comp.txt S12, E, 0.09
+S-E_Tunnel_Comp.txt S19, E, 0.06
+S-F_Close_Comp.txt II, F, 0.06

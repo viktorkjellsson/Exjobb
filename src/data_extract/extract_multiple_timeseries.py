@@ -84,10 +84,6 @@ def extract_strains(start_time, end_time, loop, pos, col, folder):
     for subfolder in subfolders:
         file_path = RAW_DATA_DIR / subfolder / loop
         strain = read_strain_value(file_path, pos, col)
-        if np.isnan(strain):
-            print(f"Strain is NaN for {subfolder} ({pos}, {col}).")
-        else:
-            print(f"Strain value for {subfolder}: {strain}")
 
         time = pd.to_datetime(subfolder, format="%Y%m%d%H%M%S")
         # Check if strain is valid before appending
@@ -95,7 +91,7 @@ def extract_strains(start_time, end_time, loop, pos, col, folder):
 
     output_dir = EXTRACTED_DATA_DIR / folder
     output_dir.mkdir(parents=True, exist_ok=True)
-    output_csv_path = output_dir / f"{loop}_{pos}_{start_time}-{end_time}.csv"
+    output_csv_path = output_dir / f"{loop}_{pos}.csv"
 
     df_strains.to_csv(output_csv_path, index=False)
     return df_strains

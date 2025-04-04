@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 import torch
 import numpy as np
+import matplotlib.dates as mdates
 
 def plot_epochs_loss(num_epochs, losses):
 
@@ -32,7 +33,7 @@ def plot_lstm_results(train_data, prediction, timestamps):
 
     fig.show()
 
-def plot_reconstruction(dataset, model, N, feature_names, ncol=3):
+def plot_reconstruction(dataset, model, N, feature_names, timestamps, ncol=2):
     """
     Plot true vs reconstructed values for every feature over N steps using subplots.
 
@@ -75,18 +76,31 @@ def plot_reconstruction(dataset, model, N, feature_names, ncol=3):
 
     # Determine subplot grid
     nrows = int(np.ceil(num_features / ncol))
-    fig, axes = plt.subplots(nrows=nrows, ncols=ncol, figsize=(5 * ncol, 4 * nrows))
+    fig, axes = plt.subplots(nrows=nrows, ncols=ncol, figsize=(10 * ncol, 4 * nrows))
     axes = axes.flatten()
+
+    print(f'timestamps shape: {timestamps.shape}')
 
     for i, ax in enumerate(axes):
         if i < num_features:
-            ax.plot(range(N), data_subset[:, i], label="True", alpha=0.8)
-            ax.plot(range(N), reconstructed[:, i], label="Reconstructed", alpha=0.8)
+            # Extract the data for plotting
+            ax.plot(timestamps, data_subset[:, i], label="True", alpha=0.8)
+            ax.plot(timestamps, reconstructed[:, i], label="Reconstructed", alpha=0.8)
+            
+            # Set title, labels, and grid
             ax.set_title(feature_names[i])
-            ax.set_xlabel("Sample Index")
+            ax.set_xlabel("Time")
             ax.set_ylabel("Value")
             ax.legend()
             ax.grid()
+
+            # Set x-axis to show months
+            ax.xaxis.set_major_locator(mdates.MonthLocator())  # Group by month
+            ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))  # Format to 'Year-Month'
+
+            # Set the tick positions first, then set the labels
+            ax.set_xticks(ax.get_xticks())  # Get the current tick positions
+            ax.set_xticklabels([mdates.DateFormatter('%Y-%m').format_data(t) for t in ax.get_xticks()], rotation=45)
         else:
             ax.axis("off")  # Hide unused subplots
 
