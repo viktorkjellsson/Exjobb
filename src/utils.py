@@ -15,23 +15,48 @@ def plot_epochs_loss(num_epochs, losses):
     plt.show()
 
 
-def plot_lstm_results(train_data, prediction, timestamps):
-    train_data_np = train_data.numpy()
-    prediction_np = prediction.detach().numpy()
+# def plot_lstm_results(train_data, prediction, timestamps):
+#     train_data_np = train_data.numpy()
+#     prediction_np = prediction.detach().numpy()
 
-    fig = go.Figure()
+#     fig = go.Figure()
 
-    fig.add_trace(go.Scatter(x=timestamps, y=train_data_np, mode='lines', name='Original Data'))
+#     fig.add_trace(go.Scatter(x=timestamps, y=train_data_np, mode='lines', name='Original Data'))
 
-    fig.add_trace(go.Scatter(x=timestamps, y=prediction_np, mode='lines', name='Reconstructed Data'))
+#     fig.add_trace(go.Scatter(x=timestamps, y=prediction_np, mode='lines', name='Reconstructed Data'))
 
-    fig.update_layout(
-        title='LSTM Reconstruction vs. Original Data',
-        xaxis_title='Time',
-        yaxis_title='Strain',
-        template='plotly_white')
+#     fig.update_layout(
+#         title='LSTM Reconstruction vs. Original Data',
+#         xaxis_title='Time',
+#         yaxis_title='Strain',
+#         template='plotly_white')
 
-    fig.show()
+#     fig.show()
+
+def calculate_anomalous_regions(original, reconstructed, mode):
+    """
+    Calculate anomalous regions based on the difference between original and reconstructed data.
+
+    Parameters:
+    - original: Original data (numpy array).
+    - reconstructed: Reconstructed data (numpy array).
+    - mode: Mode of anomaly detection (1 for absolute difference)
+
+    Returns:
+    - Anomalous regions as a boolean array.
+    """
+
+    if mode == 1:
+        diff = np.abs(original - reconstructed)
+        threshold = np.mean(diff) + 1 * np.std(diff)
+        anomalous_regions = diff > threshold
+    elif mode == 2:
+        diff = np.abs(original - reconstructed)
+        threshold = np.mean(diff) + 1 * np.std(diff)
+        anomalous_regions = diff > threshold
+        anomalous_regions = np.convolve(anomalous_regions.astype(int), np.ones(5), mode='same') >= 3
+    
+    return anomalous_regions, threshold
 
 def plot_reconstruction(dataset, model, N, feature_names, timestamps, ncol=2):
     """
@@ -83,9 +108,21 @@ def plot_reconstruction(dataset, model, N, feature_names, timestamps, ncol=2):
 
     for i, ax in enumerate(axes):
         if i < num_features:
+
+            anomalous_regions, threshold = calculate_anomalous_regions(data_subset[:, i], reconstructed[:, i], mode=2)
+            anomaly_scores = np.abs(data_subset[:, i] - reconstructed[:, i])
+
+            # threshold = np.percentile(anomaly_scores, 95)  # Example 
+            # Definine threshold: 1) over percentile 2) over mean + 3*std, 3) fixed value
+            # Define anomaly: 1) over threshold, 2) over threshold for a number of consequtive points, 3) mean of anomalies over a time window over threshold, 4) number of consequtive points over threshold x weight (weight = error / threshold)
+            # anomalies_above_threshold = anomaly_scores > threshold
             # Extract the data for plotting
             ax.plot(timestamps, data_subset[:, i], label="True", alpha=0.8)
             ax.plot(timestamps, reconstructed[:, i], label="Reconstructed", alpha=0.8)
+            ax.plot(timestamps, anomaly_scores, label="Anomaly Score", alpha=0.8)
+            ax.axhline(y=threshold, color='red', linestyle='--', label='Threshold', alpha=0.6)
+
+            ax.fill_between(timestamps, 0, anomaly_scores, where=anomalous_regions, color='red', alpha=0.3, label='Anomalous Region')
             
             # Set title, labels, and grid
             ax.set_title(feature_names[i])
@@ -107,7 +144,9 @@ def plot_reconstruction(dataset, model, N, feature_names, timestamps, ncol=2):
     plt.tight_layout()
     plt.show()
 
-def anomaly_score(original, reconstructed, timestamps, feature_names, ncol=2):
+    return reconstructed
+
+def anomaly_score(test, reconstructed, timestamps, feature_names, N, ncol=2):
     """
     Calculate and plot anomaly scores for all features.
 
@@ -118,11 +157,21 @@ def anomaly_score(original, reconstructed, timestamps, feature_names, ncol=2):
     - feature_names: List of feature names.
     - ncol: Number of columns in the subplot grid.
     """
-    # Calculate anomaly scores as the absolute error between original and reconstructed
-    anomaly_scores = np.abs(original - reconstructed)
 
-    num_features = original.shape[1]  # Number of features
-    feature_names = feature_names or [f"Feature {i+1}" for i in range(num_features)]
+    num_features = reconstructed.shape[1]  # Number of features
+    data_subset = test[:N]
+    print(f'data_subset shape: {data_subset.shape}')
+    print(f'reconstructed shape: {reconstructed.shape}')
+
+    for i in range(num_features):
+
+        # Calculate anomaly scores as the absolute error between original and reconstructed
+        print(data_subset[:,i].shape)
+        print(reconstructed[:,i].shape)
+        anomaly_scores = np.abs(test[:,i] - reconstructed[:,i])
+
+
+        feature_names = feature_names or [f"Feature {i+1}" for i in range(num_features)]
 
     # Determine subplot grid
     nrows = int(np.ceil(num_features / ncol))
@@ -132,7 +181,7 @@ def anomaly_score(original, reconstructed, timestamps, feature_names, ncol=2):
     for i, ax in enumerate(axes):
         if i < num_features:
             # Plot original, reconstructed, and anomaly scores for each feature
-            ax.plot(timestamps, original[:, i], label="Original Data", alpha=0.5)
+            ax.plot(timestamps, data_subset[:, i], label="Original Data", alpha=0.5)
             ax.plot(timestamps, reconstructed[:, i], label="Reconstructed Data", alpha=0.5)
             ax.plot(timestamps, anomaly_scores[:, i], label="Anomaly Score", alpha=0.7, color='red')
 

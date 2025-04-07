@@ -12,7 +12,7 @@ sys.path.append(str(ROOT))
 from src.processing import preprocessing
 
 class StrainDataset(Dataset):
-    def __init__(self, folder_path, sequence_length, start_idx, test_size=0.2):
+    def __init__(self, folder_path, sequence_length, start_idx, test_size):
         self.sequences = []
         self.timestamps = []
         self.timestamps_train = []
