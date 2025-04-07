@@ -2,4 +2,7 @@ data/raw
 data/GAB_extras
 notebooks/txt
 configs/txt_configs/filelist.txt
-configs/__pycache__/path_config.cpython-312.pyc
+*.pyc
+*.pth
+tests/dataset_test.ipynb
+output/logs

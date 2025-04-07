@@ -106,3 +106,52 @@ def plot_reconstruction(dataset, model, N, feature_names, timestamps, ncol=2):
 
     plt.tight_layout()
     plt.show()
+
+def anomaly_score(original, reconstructed, timestamps, feature_names, ncol=2):
+    """
+    Calculate and plot anomaly scores for all features.
+
+    Parameters:
+    - original: Original data (numpy array, shape: [n_samples, n_features]).
+    - reconstructed: Reconstructed data (numpy array, shape: [n_samples, n_features]).
+    - timestamps: Timestamps for the x-axis (numpy array).
+    - feature_names: List of feature names.
+    - ncol: Number of columns in the subplot grid.
+    """
+    # Calculate anomaly scores as the absolute error between original and reconstructed
+    anomaly_scores = np.abs(original - reconstructed)
+
+    num_features = original.shape[1]  # Number of features
+    feature_names = feature_names or [f"Feature {i+1}" for i in range(num_features)]
+
+    # Determine subplot grid
+    nrows = int(np.ceil(num_features / ncol))
+    fig, axes = plt.subplots(nrows=nrows, ncols=ncol, figsize=(10 * ncol, 4 * nrows))
+    axes = axes.flatten()
+
+    for i, ax in enumerate(axes):
+        if i < num_features:
+            # Plot original, reconstructed, and anomaly scores for each feature
+            ax.plot(timestamps, original[:, i], label="Original Data", alpha=0.5)
+            ax.plot(timestamps, reconstructed[:, i], label="Reconstructed Data", alpha=0.5)
+            ax.plot(timestamps, anomaly_scores[:, i], label="Anomaly Score", alpha=0.7, color='red')
+
+            # Set title, labels, and grid
+            ax.set_title(feature_names[i])
+            ax.set_xlabel("Time")
+            ax.set_ylabel("Value")
+            ax.legend()
+            ax.grid()
+
+            # Set x-axis to show months
+            ax.xaxis.set_major_locator(mdates.MonthLocator())  # Group by month
+            ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))  # Format to 'Year-Month'
+
+            # Set the tick positions first, then set the labels
+            ax.set_xticks(ax.get_xticks())  # Get the current tick positions
+            ax.set_xticklabels([mdates.DateFormatter('%Y-%m').format_data(t) for t in ax.get_xticks()], rotation=45)
+        else:
+            ax.axis("off")  # Hide unused subplots
+
+    plt.tight_layout()
+    plt.show()

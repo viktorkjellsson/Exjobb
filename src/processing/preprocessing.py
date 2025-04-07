@@ -7,7 +7,7 @@ from src.processing import interpolate_nan #interpolate_nan.py
 from sklearn.preprocessing import MinMaxScaler
 import pandas as pd
 
-def preprocessing_pipeline(df):
+def preprocessing_pipeline(df, interpolate_threshold):
 
     # Remove zeros and outliers
     df = remove_outliers.clean_zeros_outliers(df)
@@ -22,9 +22,6 @@ def preprocessing_pipeline(df):
     min_region_size = 5
 
     df = shift_region.shift_scale_diff(df, std_multiplier, n_points, n_points, min_region_size)
-
-    # Interpolate NaN regions shorter than the threshold
-    interpolate_threshold = 20
 
     df_filled = interpolate_nan.interpolate(df, nan_regions_sorted, interpolate_threshold)
 
