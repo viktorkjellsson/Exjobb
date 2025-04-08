@@ -1,0 +1,22 @@
+{
+    "parameters": {
+        "input_dim": 7,
+        "hidden_dim": 8,
+        "num_layers": 1,
+        "learning_rate": 0.001,
+        "num_epochs": 2
+    },
+    "start_time": "2025-04-08 10:25",
+    "end_time": "2025-04-08 10:25",
+    "training_duration": "0h 0m 2.49s",
+    "epoch_losses": [
+        {
+            "epoch": 1,
+            "loss": 0.07060815789244416
+        },
+        {
+            "epoch": 2,
+            "loss": 0.00565416745425081
+        }
+    ]
+}

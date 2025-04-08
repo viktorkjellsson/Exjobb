@@ -7,7 +7,7 @@ from pathlib import Path
 # Add the root project directory to the Python path
 ROOT = Path.cwd().parent  # This will get the project root since the notebook is in 'notebooks/'
 sys.path.append(str(ROOT))
-from configs.path_config import OUTPUT_DIR, WEIGHTS_DIR
+from configs.path_config import LOGS_DIR
 from src.train_logger import TrainingLogger
 
 
@@ -23,7 +23,7 @@ class LSTMModel(nn.Module):
         prediction = self.fc(lstm_out[:, -1, :])
         return prediction
     
-def training_loop(model, train_loader, num_epochs, learning_rate, log_dir=OUTPUT_DIR/'logs'):
+def training_loop(model, train_loader, num_epochs, learning_rate, model_folder, model_name, log_dir=LOGS_DIR/'logs'):
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
@@ -57,12 +57,12 @@ def training_loop(model, train_loader, num_epochs, learning_rate, log_dir=OUTPUT
         avg_loss = epoch_loss / len(train_loader)
         losses.append(avg_loss)
         logger.log_epoch_loss(epoch, avg_loss)
-        print(f"\nEpoch {epoch+1}/{num_epochs}, Average Loss: {avg_loss:.4f}\n")
+        print(f"\nEpoch {epoch+1}/{num_epochs}, Average Loss: {avg_loss:.6f}\n")
     
     logger.end_timer()
     logger.save_log()
-
-    savepath =  WEIGHTS_DIR / 'weights.pth'
+    
+    savepath =  model_folder / model_name
     torch.save(model, savepath)
     
     return losses, prediction 

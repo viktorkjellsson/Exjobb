@@ -27,6 +27,7 @@ CONFIG_DIR = BASE_DIR / 'configs'
 
 # Model directories
 MODEL_DIR = BASE_DIR / 'models'
+LOGS_DIR = MODEL_DIR / 'logs'
 WEIGHTS_DIR = MODEL_DIR / 'weights'
 
 # =============================

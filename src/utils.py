@@ -33,32 +33,62 @@ def plot_epochs_loss(num_epochs, losses):
 
 #     fig.show()
 
-def calculate_anomalous_regions(original, reconstructed, mode):
+def calculate_anomalous_regions(original, reconstructed, mode, k=1, n=18, error_threshold=0.1):
     """
     Calculate anomalous regions based on the difference between original and reconstructed data.
 
     Parameters:
     - original: Original data (numpy array).
     - reconstructed: Reconstructed data (numpy array).
-    - mode: Mode of anomaly detection (1 for absolute difference)
+    - mode: Mode of anomaly detection (1 for absolute difference, 2 for consecutive anomalies).
+    - k: Threshold scaling factor (default is 1).
+    - n: Minimum length for valid anomalous region (default is 5).
+    - error_threshold: The minimum error value threshold for anomalies in mode 2 (default is 0.1).
 
     Returns:
-    - Anomalous regions as a boolean array.
+    - Anomalous indices as a list of indices.
+    - Threshold for anomaly detection.
     """
+    error = np.abs(original - reconstructed)  # Calculate absolute error
+    rolling_mean_error = np.convolve(error, np.ones((n,))/n, mode='valid')  # Rolling mean error
+
+    threshold = np.mean(error) + k * np.std(error)  # Define the threshold for anomaly detection
 
     if mode == 1:
-        diff = np.abs(original - reconstructed)
-        threshold = np.mean(diff) + 1 * np.std(diff)
-        anomalous_regions = diff > threshold
-    elif mode == 2:
-        diff = np.abs(original - reconstructed)
-        threshold = np.mean(diff) + 1 * np.std(diff)
-        anomalous_regions = diff > threshold
-        anomalous_regions = np.convolve(anomalous_regions.astype(int), np.ones(5), mode='same') >= 3
+        anomalous_points = error > threshold
+        anomalous_indices = np.where(anomalous_points)[0]
     
-    return anomalous_regions, threshold
+    if mode == 2 or mode == 3:
+        anomalous_points = error > threshold  # Boolean array of anomalous points
+        if mode == 3:
+            anomalous_points = rolling_mean_error > threshold  # Boolean array of anomalous points
 
-def plot_reconstruction(dataset, model, N, feature_names, timestamps, ncol=2):
+        anomalous_indices = np.where(anomalous_points)[0]
+        # Group consecutive anomalous points into regions
+        regions = []
+        start_idx = anomalous_indices[0]  # Start with the first anomalous point
+        
+        for i in range(1, len(anomalous_indices)):
+            # If we encounter a break in the consecutive sequence, close the previous region
+            if anomalous_indices[i] != anomalous_indices[i - 1] + 1:
+                if anomalous_indices[i - 1] - start_idx + 1 >= n:  # Only keep the region if it's long enough
+                    regions.append((start_idx, anomalous_indices[i - 1]))
+                start_idx = anomalous_indices[i]  # New region starts here
+        
+        # Add the last region if it's long enough
+        if anomalous_indices[-1] - start_idx + 1 >= n:
+            regions.append((start_idx, anomalous_indices[-1]))
+        
+        # Get the indices of valid regions
+        valid_indices = []
+        for start, end in regions:
+            valid_indices.extend(range(start, end + 1))  # Add all indices in the valid regions
+        
+        anomalous_indices = valid_indices  # Only keep indices that are part of valid regions
+
+    return anomalous_indices, threshold, error, rolling_mean_error
+
+def plot_reconstruction(dataset, model, N, feature_names, timestamps, mode, ncol=1):
     """
     Plot true vs reconstructed values for every feature over N steps using subplots.
 
@@ -67,6 +97,7 @@ def plot_reconstruction(dataset, model, N, feature_names, timestamps, ncol=2):
     - model: Trained autoencoder model.
     - N: Number of steps to plot.
     - feature_names: List of feature names (optional).
+    - mode: Mode of anomaly detection (1 for absolute difference, 2 for consecutive anomalies).
     - ncol: Number of columns in the subplot grid.
     """
     model.eval()  # Set model to evaluation mode
@@ -101,46 +132,53 @@ def plot_reconstruction(dataset, model, N, feature_names, timestamps, ncol=2):
 
     # Determine subplot grid
     nrows = int(np.ceil(num_features / ncol))
-    fig, axes = plt.subplots(nrows=nrows, ncols=ncol, figsize=(10 * ncol, 4 * nrows))
+    fig, axes = plt.subplots(nrows=nrows, ncols=ncol, figsize=(20 * ncol, 4 * nrows))
     axes = axes.flatten()
 
     print(f'timestamps shape: {timestamps.shape}')
 
     for i, ax in enumerate(axes):
         if i < num_features:
+            # Calculate anomalies and threshold
+            window_size = 18
+            anomalous_indices, threshold, error, rolling_mean_error = calculate_anomalous_regions(data_subset[:, i], reconstructed[:, i], mode=mode)
+            print(f'{feature_names[i]}\n  Anomalies: {anomalous_indices}\n  Threshold: {threshold}')
+            
 
-            anomalous_regions, threshold = calculate_anomalous_regions(data_subset[:, i], reconstructed[:, i], mode=2)
-            anomaly_scores = np.abs(data_subset[:, i] - reconstructed[:, i])
-
-            # threshold = np.percentile(anomaly_scores, 95)  # Example 
-            # Definine threshold: 1) over percentile 2) over mean + 3*std, 3) fixed value
-            # Define anomaly: 1) over threshold, 2) over threshold for a number of consequtive points, 3) mean of anomalies over a time window over threshold, 4) number of consequtive points over threshold x weight (weight = error / threshold)
-            # anomalies_above_threshold = anomaly_scores > threshold
-            # Extract the data for plotting
+            # Plot the true data, reconstructed data, and error
             ax.plot(timestamps, data_subset[:, i], label="True", alpha=0.8)
             ax.plot(timestamps, reconstructed[:, i], label="Reconstructed", alpha=0.8)
-            ax.plot(timestamps, anomaly_scores, label="Anomaly Score", alpha=0.8)
+            ax.plot(timestamps, error, label="Anomaly Score", alpha=0.8)
+            
+            # Plot the rolling mean error with a distinct label
+            ax.plot(timestamps[window_size - 1:], rolling_mean_error, label="Rolling Mean Error", alpha=0.8, color='green')
+
+            # Plot the threshold line
             ax.axhline(y=threshold, color='red', linestyle='--', label='Threshold', alpha=0.6)
 
-            ax.fill_between(timestamps, 0, anomaly_scores, where=anomalous_regions, color='red', alpha=0.3, label='Anomalous Region')
-            
-            # Set title, labels, and grid
+            # Highlight anomalous regions
+            anomalous_region_mask = np.zeros_like(error, dtype=bool)
+            anomalous_region_mask[anomalous_indices] = True
+            ax.fill_between(timestamps, 0, 1, where=anomalous_region_mask, color='red', alpha=0.3, label='Anomalous Region')
+
+            # Set plot titles, labels, and grid
             ax.set_title(feature_names[i])
             ax.set_xlabel("Time")
             ax.set_ylabel("Value")
             ax.legend()
             ax.grid()
 
-            # Set x-axis to show months
+            # Format the x-axis to show months
             ax.xaxis.set_major_locator(mdates.MonthLocator())  # Group by month
             ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))  # Format to 'Year-Month'
 
-            # Set the tick positions first, then set the labels
-            ax.set_xticks(ax.get_xticks())  # Get the current tick positions
+            # Adjust x-tick labels for better readability
+            ax.set_xticks(ax.get_xticks())  # Get current tick positions
             ax.set_xticklabels([mdates.DateFormatter('%Y-%m').format_data(t) for t in ax.get_xticks()], rotation=45)
         else:
             ax.axis("off")  # Hide unused subplots
 
+    # Adjust layout and show the plot
     plt.tight_layout()
     plt.show()
 
