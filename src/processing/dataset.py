@@ -12,7 +12,7 @@ sys.path.append(str(ROOT))
 from src.processing import preprocessing
 
 class StrainDataset(Dataset):
-    def __init__(self, folder_path, sequence_length, start_idx, test_size):
+    def __init__(self, folder_path, features, sequence_length, start_idx, test_size):
         self.sequences = []
         self.timestamps = []
         self.timestamps_train = []
@@ -30,11 +30,19 @@ class StrainDataset(Dataset):
             df["Time"] = pd.to_datetime(df["Time"], errors="coerce")
             self.timestamps.append(df["Time"].values)  # Store timestamps
             
+            # Apply preprocessing pipeline
             processed_df = preprocessing.preprocessing_pipeline(df, interpolate_threshold=60)  # Process the data
-            strain_series = processed_df["Strain"].fillna(0)
-            multivariate_data.append(strain_series)
+            
+            # Apply feature engineering
+            processed_df = preprocessing.add_features(processed_df, column="Strain", window=12)
+            print(processed_df.columns)  # Debugging line to check columns
 
-        multivariate_data = np.stack(multivariate_data, axis=1)  # Stack processed data
+            strain_series = processed_df[features].fillna(0).to_numpy()
+            multivariate_data.append(strain_series)  # Append the data from each file
+        
+        # After the loop, concatenate all the data
+        multivariate_data = np.concatenate(multivariate_data, axis=1)  # Concatenate along the correct axis
+        print(multivariate_data)  # Debugging line to check shape
         self.feature_count = multivariate_data.shape[1]  # Number of CSV files
 
         # Create rolling sequences
@@ -52,6 +60,14 @@ class StrainDataset(Dataset):
         self.timestamps_train = [ts[:train_size] for ts in self.timestamps]  # Split training timestamps
         self.timestamps_test = [ts[train_size:] for ts in self.timestamps]   # Split testing timestamps
 
+        # Create expanded feature names with engineering features
+        expanded_feature_names = []
+        for feature in self.file_names:
+            for eng_feature in features:
+                expanded_feature_names.append(f"{feature} - {eng_feature}")
+
+        self.feature_names = expanded_feature_names  # Store expanded names
+
         # Define DataLoaders
         self.train_dataloader = DataLoader(self.train_data, batch_size=32, shuffle=True)
         self.test_dataloader = DataLoader(self.test_data, batch_size=32, shuffle=False)
@@ -66,4 +82,5 @@ class StrainDataset(Dataset):
         return self.train_data[idx]  # Return a training sequence
 
     def get_test_data(self):
-        return self.test_data  # Return test data 
+        return self.test_data  # Return test data
+    

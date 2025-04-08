@@ -118,6 +118,9 @@ def plot_reconstruction(dataset, model, N, feature_names, timestamps, mode, ncol
     data_subset = data_subset.cpu().numpy()
     reconstructed = reconstructed.cpu().numpy()
 
+    print(f"Shape of data_subset: {data_subset.shape}")
+    print(f"Shape of reconstructed: {reconstructed.shape}")
+
     # Extract last timestep if sequences are present
     if len(data_subset.shape) == 3:  # (N, seq_len, num_features)
         data_subset = data_subset[:, -1, :]  # Extract last time step
@@ -134,8 +137,6 @@ def plot_reconstruction(dataset, model, N, feature_names, timestamps, mode, ncol
     nrows = int(np.ceil(num_features / ncol))
     fig, axes = plt.subplots(nrows=nrows, ncols=ncol, figsize=(20 * ncol, 4 * nrows))
     axes = axes.flatten()
-
-    print(f'timestamps shape: {timestamps.shape}')
 
     for i, ax in enumerate(axes):
         if i < num_features:

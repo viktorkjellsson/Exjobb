@@ -12,20 +12,28 @@ from src.train_logger import TrainingLogger
 
 
 class LSTMModel(nn.Module):
-    def __init__(self, input_dim, hidden_dim, num_layers):
+    def __init__(self, input_dim, hidden_dim, num_layers, dropout):    
         super(LSTMModel, self).__init__()
 
-        self.lstm = nn.LSTM(input_dim, hidden_dim, num_layers, batch_first=True)
+        self.lstm = nn.LSTM(
+            input_size=input_dim,
+            hidden_size=hidden_dim,
+            num_layers=num_layers,
+            batch_first=True,
+            dropout=dropout if num_layers > 1 else 0.0
+        )
+        self.dropout = nn.Dropout(dropout)
         self.fc = nn.Linear(hidden_dim, input_dim)
 
     def forward(self, x):
-        lstm_out, _ = self.lstm(x)
-        prediction = self.fc(lstm_out[:, -1, :])
+        lstm_out, _ = self.lstm(x)                        # [batch, seq_len, hidden]
+        out = self.dropout(lstm_out[:, -1, :])            # final timestep output
+        prediction = self.fc(out)                         # [batch, input_dim]
         return prediction
     
-def training_loop(model, train_loader, num_epochs, learning_rate, model_folder, model_name, log_dir=LOGS_DIR/'logs'):
+def training_loop(model, train_loader, num_epochs, learning_rate, weight_decay, model_folder, model_name, log_dir=LOGS_DIR):
     criterion = nn.MSELoss()
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
 
     # Initialize Logger
     logger = TrainingLogger(log_dir=log_dir)
@@ -35,6 +43,8 @@ def training_loop(model, train_loader, num_epochs, learning_rate, model_folder, 
         num_layers=model.lstm.num_layers,
         learning_rate=learning_rate,
         num_epochs=num_epochs,
+        dropout=model.lstm.dropout,
+        weight_decay=weight_decay
     )
     logger.start_timer()
 
