@@ -3,6 +3,7 @@ import plotly.graph_objects as go
 import torch
 import numpy as np
 import matplotlib.dates as mdates
+import pandas as pd
 
 def plot_epochs_loss(num_epochs, losses):
 
@@ -32,6 +33,48 @@ def plot_epochs_loss(num_epochs, losses):
 #         template='plotly_white')
 
 #     fig.show()
+
+
+def sort_anomalies(anomalous_indices, timestamps):
+    
+    """
+    Find regions with more than 'threshold' consecutive NaNs in the 'Strain' column of the DataFrame.
+
+    Args: 
+        df (pd.DataFrame): The input DataFrame.
+        threshold (int): Minimum number of consecutive NaN values to consider as a region.
+
+    Returns:
+        consecutive_nan_regions (list): List of tuples containing start and end indices of consecutive NaN regions.
+        nan_regions_sorted (list): Sorted list including start & end times, indices, and length.
+    """
+    consecutive_anomalies = []
+    start_idx = None
+
+    for i in range(len(anomalous_indices)):
+        if start_idx is None:
+            start_idx = anomalous_indices[i]
+        if i == len(anomalous_indices) - 1 or anomalous_indices[i] + 1 != anomalous_indices[i + 1]:
+            end_idx = anomalous_indices[i]
+            if (end_idx - start_idx + 1) >= 1:
+                consecutive_anomalies.append((start_idx, end_idx))
+            start_idx = None
+
+       # Create a DataFrame
+    data = [{
+        'Start': timestamps[start],
+        'End': timestamps[end],
+        # 'Start_idx': start,
+        # 'End_idx': end,
+        'Length': f"{(timestamps[end] - timestamps[start]).days} days, {(timestamps[end] - timestamps[start]).seconds // 3600} hours"
+    } for start, end in consecutive_anomalies]
+
+    df_anomalies = pd.DataFrame(data)
+    df_anomalies.sort_values(by='Start', ascending=True, inplace=True)
+    df_anomalies.reset_index(drop=True, inplace=True)
+
+    return df_anomalies
+
 
 def calculate_anomalous_regions(original, reconstructed, mode, k=1, n=18, error_threshold=0.1):
     """
@@ -88,6 +131,8 @@ def calculate_anomalous_regions(original, reconstructed, mode, k=1, n=18, error_
 
     return anomalous_indices, threshold, error, rolling_mean_error
 
+
+
 def plot_reconstruction(dataset, model, N, feature_names, timestamps, mode, ncol=1):
     """
     Plot true vs reconstructed values for every feature over N steps using subplots.
@@ -132,6 +177,7 @@ def plot_reconstruction(dataset, model, N, feature_names, timestamps, mode, ncol
 
     # Ensure feature names are valid
     feature_names = feature_names or [f"Feature {i+1}" for i in range(num_features)]
+    print("Features----------------------------------\n" + "\n".join(feature_names))
 
     # Determine subplot grid
     nrows = int(np.ceil(num_features / ncol))
@@ -140,10 +186,13 @@ def plot_reconstruction(dataset, model, N, feature_names, timestamps, mode, ncol
 
     for i, ax in enumerate(axes):
         if i < num_features:
+            feature_name = feature_names[i]
+
             # Calculate anomalies and threshold
             window_size = 18
             anomalous_indices, threshold, error, rolling_mean_error = calculate_anomalous_regions(data_subset[:, i], reconstructed[:, i], mode=mode)
-            print(f'{feature_names[i]}\n  Anomalies: {anomalous_indices}\n  Threshold: {threshold}')
+            df_anomalies = sort_anomalies(anomalous_indices, timestamps)
+            print(f'\n{feature_name} Anomalies:\n{df_anomalies}')
             
 
             # Plot the true data, reconstructed data, and error
@@ -163,7 +212,7 @@ def plot_reconstruction(dataset, model, N, feature_names, timestamps, mode, ncol
             ax.fill_between(timestamps, 0, 1, where=anomalous_region_mask, color='red', alpha=0.3, label='Anomalous Region')
 
             # Set plot titles, labels, and grid
-            ax.set_title(feature_names[i])
+            ax.set_title(feature_name)
             ax.set_xlabel("Time")
             ax.set_ylabel("Value")
             ax.legend()
@@ -184,6 +233,7 @@ def plot_reconstruction(dataset, model, N, feature_names, timestamps, mode, ncol
     plt.show()
 
     return reconstructed
+
 
 def anomaly_score(test, reconstructed, timestamps, feature_names, N, ncol=2):
     """

@@ -35,7 +35,7 @@ def preprocessing_pipeline(df, interpolate_threshold):
     return df
 
 
-def add_features(df, column="Strain", window=10):
+def add_features(df, column="Strain", window=6):
     """
     Adds time-series features: rolling mean, variance, standard deviation.
 

@@ -31,9 +31,9 @@ class LSTMModel(nn.Module):
         prediction = self.fc(out)                         # [batch, input_dim]
         return prediction
     
-def training_loop(model, train_loader, num_epochs, learning_rate, weight_decay, model_folder, model_name, log_dir=LOGS_DIR):
+def training_loop(model, train_loader, num_epochs, learning_rate, model_folder, model_name, log_dir=LOGS_DIR):
     criterion = nn.MSELoss()
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
     # Initialize Logger
     logger = TrainingLogger(log_dir=log_dir)
@@ -44,7 +44,7 @@ def training_loop(model, train_loader, num_epochs, learning_rate, weight_decay, 
         learning_rate=learning_rate,
         num_epochs=num_epochs,
         dropout=model.lstm.dropout,
-        weight_decay=weight_decay
+        # weight_decay=weight_decay
     )
     logger.start_timer()
 

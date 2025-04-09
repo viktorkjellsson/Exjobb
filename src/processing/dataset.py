@@ -42,7 +42,6 @@ class StrainDataset(Dataset):
         
         # After the loop, concatenate all the data
         multivariate_data = np.concatenate(multivariate_data, axis=1)  # Concatenate along the correct axis
-        print(multivariate_data)  # Debugging line to check shape
         self.feature_count = multivariate_data.shape[1]  # Number of CSV files
 
         # Create rolling sequences
