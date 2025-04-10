@@ -48,6 +48,7 @@ def sort_anomalies(anomalous_indices, timestamps):
         consecutive_nan_regions (list): List of tuples containing start and end indices of consecutive NaN regions.
         nan_regions_sorted (list): Sorted list including start & end times, indices, and length.
     """
+    print(f"\n[DEBUG] anomalous_indices: {anomalous_indices}")
     consecutive_anomalies = []
     start_idx = None
 
@@ -60,16 +61,21 @@ def sort_anomalies(anomalous_indices, timestamps):
                 consecutive_anomalies.append((start_idx, end_idx))
             start_idx = None
 
-       # Create a DataFrame
+    print(f"[DEBUG] consecutive_anomalies: {consecutive_anomalies}")
+    print(f"[DEBUG] timestamps length: {len(timestamps)}")
+
+    if not consecutive_anomalies:
+        print("[DEBUG] No consecutive anomalies found.")
+        return pd.DataFrame()
+
     data = [{
         'Start': timestamps[start],
         'End': timestamps[end],
-        # 'Start_idx': start,
-        # 'End_idx': end,
         'Length': f"{(timestamps[end] - timestamps[start]).days} days, {(timestamps[end] - timestamps[start]).seconds // 3600} hours"
     } for start, end in consecutive_anomalies]
 
     df_anomalies = pd.DataFrame(data)
+    print(f"[DEBUG] Anomalies DataFrame:\n{df_anomalies}")
     df_anomalies.sort_values(by='Start', ascending=True, inplace=True)
     df_anomalies.reset_index(drop=True, inplace=True)
 

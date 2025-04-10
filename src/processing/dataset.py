@@ -34,8 +34,7 @@ class StrainDataset(Dataset):
             processed_df = preprocessing.preprocessing_pipeline(df, interpolate_threshold=60)  # Process the data
             
             # Apply feature engineering
-            processed_df = preprocessing.add_features(processed_df, column="Strain", window=12)
-            print(processed_df.columns)  # Debugging line to check columns
+            processed_df = preprocessing.add_features(processed_df, column="Strain")
 
             strain_series = processed_df[features].fillna(0).to_numpy()
             multivariate_data.append(strain_series)  # Append the data from each file

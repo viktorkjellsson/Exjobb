@@ -31,6 +31,7 @@ def preprocessing_pipeline(df, interpolate_threshold):
 
     scaler = MinMaxScaler()
     df['Strain'] = scaler.fit_transform(df[['Strain']])
+    df['Temperature'] = scaler.fit_transform(df[['Temperature']])
 
     return df
 
