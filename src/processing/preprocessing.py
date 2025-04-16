@@ -21,7 +21,7 @@ def preprocessing_pipeline(df, interpolate_threshold):
     std_multiplier = 4.6
     min_region_size = 5
 
-    df = shift_region.shift_scale_diff(df, std_multiplier, n_points, n_points, min_region_size)
+    # df = shift_region.shift_scale_diff(df, std_multiplier, n_points, n_points, min_region_size)
 
     df_filled = interpolate_nan.interpolate(df, nan_regions_sorted, interpolate_threshold)
 

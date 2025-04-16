@@ -12,7 +12,7 @@ from src.train_logger import TrainingLogger
 
 
 class LSTMModel(nn.Module):
-    def __init__(self, input_dim, hidden_dim, num_layers, dropout):    
+    def __init__(self, input_dim, hidden_dim, output_dim, num_layers, dropout):    
         super(LSTMModel, self).__init__()
 
         self.lstm = nn.LSTM(
@@ -23,7 +23,7 @@ class LSTMModel(nn.Module):
             dropout=dropout if num_layers > 1 else 0.0
         )
         self.dropout = nn.Dropout(dropout)
-        self.fc = nn.Linear(hidden_dim, input_dim)
+        self.fc = nn.Linear(hidden_dim, output_dim)
 
     def forward(self, x):
         lstm_out, _ = self.lstm(x)                        # [batch, seq_len, hidden]
@@ -54,11 +54,11 @@ def training_loop(model, train_loader, num_epochs, learning_rate, model_folder, 
         epoch_loss = 0
 
         # Wrap train_loader with tqdm to add a progress bar
-        for batch_idx, batch in enumerate(tqdm(train_loader, desc=f"Epoch {epoch+1}/{num_epochs}", unit="batch")):
+        for batch_idx, (inputs, targets) in enumerate(tqdm(train_loader, desc=f"Epoch {epoch+1}/{num_epochs}", unit="batch")):
             # Uncomment if needed: batch = batch.unsqueeze(-1).float()
             optimizer.zero_grad()
-            prediction = model(batch)
-            loss = criterion(prediction, batch[:, -1, :])
+            prediction = model(inputs)
+            loss = criterion(prediction, targets)
             loss.backward()
             optimizer.step()
 

@@ -11,6 +11,8 @@ FEATURES = ['Strain',
             'Rolling_mean', 
             'Rolling_std']
 
+TARGET_FEATURE = 'Strain'
+
 # Model parameters
 
 PARAMS = {

@@ -55,6 +55,10 @@ def read_strain_temp_value(file_path, pos):
         # df = pd.read_csv(file_path, sep = r'[,\s]+', header=None)
 
         matching_row = df[df[0] == pos]
+        if matching_row.empty:
+            print(f"[Warning] No matching row found in file: {file_path}, for pos: {pos}")
+            return None, None  # or some sensible default
+
         strain = matching_row.iloc[0, 1] # Strain is in column 1
         temp = matching_row.iloc[0, 4] # Temperature is in column 4
         return strain, temp #if not matching_row.empty else np.nan
