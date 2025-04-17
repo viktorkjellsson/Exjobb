@@ -41,7 +41,7 @@ def clean_zeros_outliers(df):
     # print(f'Number of extreme outliers (3 × IQR): {num_extreme_outliers}')
 
     # Replace extreme outliers with NaN
-    df.loc[mild_outlier_indices, 'Strain'] = np.nan  # Using np.nan to replace the outlier values
+    df.loc[extreme_outlier_indices, 'Strain'] = np.nan  # Using np.nan to replace the outlier values
     # print(f'Number of outliers replaced with NaN: {len(mild_outlier_indices)}')
 
 
