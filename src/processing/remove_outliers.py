@@ -23,9 +23,9 @@ def clean_zeros_outliers(df):
 
     # Define bounds for extreme outliers
     lower_bound = Q1 - 1.5 * IQR
-    lower_bound_extreme = Q1 - 3 * IQR
+    lower_bound_extreme = Q1 - 6 * IQR
     upper_bound = Q3 + 1.5 * IQR
-    upper_bound_extreme = Q3 + 3 * IQR
+    upper_bound_extreme = Q3 + 6 * IQR
 
     mild_outliers = df[(df['Strain'] < lower_bound) | (df['Strain'] > upper_bound)]
     mild_outlier_indices = mild_outliers.index  # Save the indices of mild outliers
@@ -41,7 +41,7 @@ def clean_zeros_outliers(df):
     # print(f'Number of extreme outliers (3 × IQR): {num_extreme_outliers}')
 
     # Replace extreme outliers with NaN
-    df.loc[mild_outlier_indices, 'Strain'] = np.nan  # Using np.nan to replace the outlier values
+    df.loc[extreme_outlier_indices, 'Strain'] = np.nan  # Using np.nan to replace the outlier values
     # print(f'Number of outliers replaced with NaN: {len(mild_outlier_indices)}')
 
 

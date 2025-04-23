@@ -10,6 +10,8 @@ FEATURES = ['Strain',
             'Temperature',
             'Rolling_mean', 
             'Rolling_std']
+# FEATURES = ['Strain']
+
 
 # Model parameters
 
