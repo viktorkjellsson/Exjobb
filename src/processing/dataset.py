@@ -1,3 +1,120 @@
+from pathlib import Path
+from dataclasses import dataclass
+import pandas as pd
+import numpy as np
+import sys
+import torch
+from torch.utils.data import Dataset, DataLoader
+from sklearn.preprocessing import MinMaxScaler
+
+# Add the root project directory to the Python path
+ROOT = Path.cwd().parent.parent  # Adjust if needed
+sys.path.append(str(ROOT))
+from src.processing import preprocessing
+
+
+class StrainDataset(Dataset):
+    def __init__(self, folder_path, features, sequence_length, start_idx, test_size):
+        print("Initializing StrainDataset...")
+
+        self.file_names = []  # Store file names
+        train_data_list = []
+        test_data_list = []
+        train_timestamps = []
+        test_timestamps = []
+
+        for file in folder_path.glob("*.csv"):
+            print(f"Processing file: {file}")
+            self.file_names.append(file.stem)
+            df = pd.read_csv(file)
+
+            # Initial trimming
+            df = df.iloc[start_idx:-1].copy()
+            df["Time"] = pd.to_datetime(df["Time"], errors="coerce")
+
+            # Apply preprocessing
+            df = preprocessing.preprocessing_pipeline(df, interpolate_threshold=0)
+
+            # Split BEFORE feature engineering
+            split_idx = int(len(df) * (1 - test_size))
+            train_df = df.iloc[:split_idx].copy()
+            test_df = df.iloc[split_idx:].copy()
+
+            # Save timestamps
+            train_timestamps.extend(train_df["Time"].values)
+            test_timestamps.extend(test_df["Time"].values)
+
+            # Apply feature engineering independently
+            train_df = preprocessing.add_features(train_df, column="Strain")
+            test_df = preprocessing.add_features(test_df, column="Strain")
+
+            # Extract features
+            train_features = train_df[features].fillna(0).to_numpy()
+            test_features = test_df[features].fillna(0).to_numpy()
+            train_data_list.append(train_features)
+            test_data_list.append(test_features)
+
+        # Concatenate data from all sensors (horizontally)
+        train_data = np.concatenate(train_data_list, axis=1)
+        test_data = np.concatenate(test_data_list, axis=1)
+        print(f"Train shape: {train_data.shape}, Test shape: {test_data.shape}")
+
+        # Rolling sequence generation
+        train_sequences = [train_data[i:i + sequence_length] for i in range(len(train_data) - sequence_length)]
+        test_sequences = [test_data[i:i + sequence_length] for i in range(len(test_data) - sequence_length)]
+
+        # Convert to NumPy
+        train_sequences_np = np.array(train_sequences)
+        test_sequences_np = np.array(test_sequences)
+
+        # Scale based on training data only
+        scaler = MinMaxScaler()
+        train_flat = train_sequences_np.reshape(train_sequences_np.shape[0], -1)
+        test_flat = test_sequences_np.reshape(test_sequences_np.shape[0], -1)
+        train_scaled = scaler.fit_transform(train_flat)
+        test_scaled = scaler.transform(test_flat)
+
+        # Reshape back to [n_samples, sequence_length, n_features]
+        self.train_data = torch.tensor(train_scaled.reshape(-1, sequence_length, train_data.shape[1]), dtype=torch.float32)
+        self.test_data = torch.tensor(test_scaled.reshape(-1, sequence_length, test_data.shape[1]), dtype=torch.float32)
+
+        # Store timestamps
+        self.timestamps_train = train_timestamps
+        self.timestamps_test = test_timestamps
+
+        # Overlap check via hashing
+        train_hashes = [hash(tuple(seq.numpy().flatten())) for seq in self.train_data]
+        test_hashes = [hash(tuple(seq.numpy().flatten())) for seq in self.test_data]
+        overlap_hashes = set(train_hashes).intersection(set(test_hashes))
+        print(f"Number of overlapping hashes: {len(overlap_hashes)}")
+        if overlap_hashes:
+            print("⚠️ Overlapping sequences detected! Potential data leakage.")
+        else:
+            print("✅ No overlapping sequences detected. Train-test split is clean.")
+
+        # DataLoaders
+        self.train_dataloader = DataLoader(self.train_data, batch_size=32, shuffle=True)
+        self.test_dataloader = DataLoader(self.test_data, batch_size=32, shuffle=False)
+
+        # Feature name expansion
+        expanded_feature_names = []
+        for sensor_name in self.file_names:
+            for f in features:
+                expanded_feature_names.append(f"{sensor_name} - {f}")
+        self.feature_names = expanded_feature_names
+        self.feature_count = train_data.shape[1]
+
+    def get_timestamps(self):
+        return self.timestamps_train, self.timestamps_test
+
+    def __len__(self):
+        return len(self.train_data)
+
+    def __getitem__(self, idx):
+        return self.train_data[idx]
+
+
+# 2025-04-22 safe split, feature engineering still on the entire dataset
 # from pathlib import Path
 # import pandas as pd
 # import numpy as np
@@ -98,131 +215,131 @@
 #     def get_test_data(self):
 #         return self.test_data
 
-from pathlib import Path
-from dataclasses import dataclass
-import pandas as pd
-import numpy as np
-import sys
-import torch
-from torch.utils.data import Dataset, DataLoader
-from sklearn.preprocessing import MinMaxScaler
+# from pathlib import Path
+# from dataclasses import dataclass
+# import pandas as pd
+# import numpy as np
+# import sys
+# import torch
+# from torch.utils.data import Dataset, DataLoader
+# from sklearn.preprocessing import MinMaxScaler
 
-# Add the root project directory to the Python path
-ROOT = Path.cwd().parent.parent  # Adjust if needed
-sys.path.append(str(ROOT))
-from src.processing import preprocessing
+# # Add the root project directory to the Python path
+# ROOT = Path.cwd().parent.parent  # Adjust if needed
+# sys.path.append(str(ROOT))
+# from src.processing import preprocessing
 
 
-class StrainDataset(Dataset):
-    def __init__(self, folder_path, features, sequence_length, start_idx, test_size):
-        print("Initializing StrainDataset...")
+# class StrainDataset(Dataset):
+#     def __init__(self, folder_path, features, sequence_length, start_idx, test_size):
+#         print("Initializing StrainDataset...")
 
-        self.file_names = []  # Store file names
-        all_timestamps = []
-        multivariate_data = []
+#         self.file_names = []  # Store file names
+#         all_timestamps = []
+#         multivariate_data = []
 
-        # Load and process each .csv file
-        for file in folder_path.glob("*.csv"):
-            print(f"Processing file: {file}")
-            self.file_names.append(file.stem)
-            df = pd.read_csv(file)
+#         # Load and process each .csv file
+#         for file in folder_path.glob("*.csv"):
+#             print(f"Processing file: {file}")
+#             self.file_names.append(file.stem)
+#             df = pd.read_csv(file)
 
-            # Trim data
-            df = df.iloc[start_idx:-1]
+#             # Trim data
+#             df = df.iloc[start_idx:-1]
 
-            # Convert timestamps
-            df["Time"] = pd.to_datetime(df["Time"], errors="coerce")
-            all_timestamps.extend(df["Time"].values)  # Collect all timestamps as a single list
+#             # Convert timestamps
+#             df["Time"] = pd.to_datetime(df["Time"], errors="coerce")
+#             all_timestamps.extend(df["Time"].values)  # Collect all timestamps as a single list
 
-            # Apply preprocessing pipeline
-            processed_df = preprocessing.preprocessing_pipeline(df, interpolate_threshold=60)
+#             # Apply preprocessing pipeline
+#             processed_df = preprocessing.preprocessing_pipeline(df, interpolate_threshold=60)
 
-            # Apply feature engineering
-            processed_df = preprocessing.add_features(processed_df, column="Strain")
+#             # Apply feature engineering
+#             processed_df = preprocessing.add_features(processed_df, column="Strain")
 
-            # Extract features
-            strain_series = processed_df[features].fillna(0).to_numpy()
-            multivariate_data.append(strain_series)
+#             # Extract features
+#             strain_series = processed_df[features].fillna(0).to_numpy()
+#             multivariate_data.append(strain_series)
 
-        # Concatenate data along the feature axis
-        multivariate_data = np.concatenate(multivariate_data, axis=1)
-        all_timestamps = np.array(all_timestamps)  # Convert timestamps to NumPy
-        print(f"Shape of concatenated multivariate data: {multivariate_data.shape}")
+#         # Concatenate data along the feature axis
+#         multivariate_data = np.concatenate(multivariate_data, axis=1)
+#         all_timestamps = np.array(all_timestamps)  # Convert timestamps to NumPy
+#         print(f"Shape of concatenated multivariate data: {multivariate_data.shape}")
 
-        # Verify timestamps alignment
-        if len(all_timestamps) < multivariate_data.shape[0]:
-            raise ValueError("The number of timestamps does not match the expected number based on data rows.")
+#         # Verify timestamps alignment
+#         if len(all_timestamps) < multivariate_data.shape[0]:
+#             raise ValueError("The number of timestamps does not match the expected number based on data rows.")
 
-        # Train-test split
-        train_size = int(len(multivariate_data) * (1 - test_size))
-        train_data = multivariate_data[:train_size]
-        test_data = multivariate_data[train_size:]
-        train_timestamps = all_timestamps[:train_size]
-        test_timestamps = all_timestamps[train_size:]
+#         # Train-test split
+#         train_size = int(len(multivariate_data) * (1 - test_size))
+#         train_data = multivariate_data[:train_size]
+#         test_data = multivariate_data[train_size:]
+#         train_timestamps = all_timestamps[:train_size]
+#         test_timestamps = all_timestamps[train_size:]
 
-        # Create rolling sequences for train and test
-        train_sequences = [train_data[i: i + sequence_length] for i in range(len(train_data) - sequence_length)]
-        test_sequences = [test_data[i: i + sequence_length] for i in range(len(test_data) - sequence_length)]
+#         # Create rolling sequences for train and test
+#         train_sequences = [train_data[i: i + sequence_length] for i in range(len(train_data) - sequence_length)]
+#         test_sequences = [test_data[i: i + sequence_length] for i in range(len(test_data) - sequence_length)]
 
-        # Convert rolling sequences into NumPy arrays
-        train_sequences_np = np.array(train_sequences)
-        test_sequences_np = np.array(test_sequences)
+#         # Convert rolling sequences into NumPy arrays
+#         train_sequences_np = np.array(train_sequences)
+#         test_sequences_np = np.array(test_sequences)
 
-        # Apply scaling after splitting to prevent data leakage
-        scaler = MinMaxScaler()
-        train_sequences_np = scaler.fit_transform(train_sequences_np.reshape(train_sequences_np.shape[0], -1))
-        test_sequences_np = scaler.transform(test_sequences_np.reshape(test_sequences_np.shape[0], -1))
+#         # Apply scaling after splitting to prevent data leakage
+#         scaler = MinMaxScaler()
+#         train_sequences_np = scaler.fit_transform(train_sequences_np.reshape(train_sequences_np.shape[0], -1))
+#         test_sequences_np = scaler.transform(test_sequences_np.reshape(test_sequences_np.shape[0], -1))
 
-        # Convert back to tensors correctly
-        self.train_data = torch.tensor(train_sequences_np.reshape(train_sequences_np.shape[0], sequence_length, -1), dtype=torch.float32)
-        self.test_data = torch.tensor(test_sequences_np.reshape(test_sequences_np.shape[0], sequence_length, -1), dtype=torch.float32)
+#         # Convert back to tensors correctly
+#         self.train_data = torch.tensor(train_sequences_np.reshape(train_sequences_np.shape[0], sequence_length, -1), dtype=torch.float32)
+#         self.test_data = torch.tensor(test_sequences_np.reshape(test_sequences_np.shape[0], sequence_length, -1), dtype=torch.float32)
 
-        # Assign rolling timestamps
-        self.timestamps_train = train_timestamps
-        self.timestamps_test = test_timestamps
+#         # Assign rolling timestamps
+#         self.timestamps_train = train_timestamps
+#         self.timestamps_test = test_timestamps
 
-        # Check for overlaps
-        train_hashes = [hash(tuple(seq.numpy().flatten())) for seq in self.train_data]
-        test_hashes = [hash(tuple(seq.numpy().flatten())) for seq in self.test_data]
-        overlap_hashes = set(train_hashes).intersection(set(test_hashes))
-        print(f"Number of overlapping hashes: {len(overlap_hashes)}")
-        if len(overlap_hashes) > 0:
-            print("Overlapping sequences detected! Potential data leakage.")
-        else:
-            print("No overlapping sequences detected. Train-test split is clean.")
+#         # Check for overlaps
+#         train_hashes = [hash(tuple(seq.numpy().flatten())) for seq in self.train_data]
+#         test_hashes = [hash(tuple(seq.numpy().flatten())) for seq in self.test_data]
+#         overlap_hashes = set(train_hashes).intersection(set(test_hashes))
+#         print(f"Number of overlapping hashes: {len(overlap_hashes)}")
+#         if len(overlap_hashes) > 0:
+#             print("Overlapping sequences detected! Potential data leakage.")
+#         else:
+#             print("No overlapping sequences detected. Train-test split is clean.")
 
-        # # Check for index overlaps
-        # train_indices_set = set(self.train_indices)
-        # test_indices_set = set(self.test_indices)
-        # overlap_indices = train_indices_set.intersection(test_indices_set)
-        # print(f"Number of overlapping indices: {len(overlap_indices)}")
-        # if len(overlap_indices) > 0:
-        #     print("Overlapping indices detected! Potential data leakage.")
-        # else:
-        #     print("No overlapping indices detected. Train-test split is clean.")
+#         # # Check for index overlaps
+#         # train_indices_set = set(self.train_indices)
+#         # test_indices_set = set(self.test_indices)
+#         # overlap_indices = train_indices_set.intersection(test_indices_set)
+#         # print(f"Number of overlapping indices: {len(overlap_indices)}")
+#         # if len(overlap_indices) > 0:
+#         #     print("Overlapping indices detected! Potential data leakage.")
+#         # else:
+#         #     print("No overlapping indices detected. Train-test split is clean.")
 
-        # Define DataLoaders
-        self.train_dataloader = DataLoader(self.train_data, batch_size=32, shuffle=True)
-        self.test_dataloader = DataLoader(self.test_data, batch_size=32, shuffle=False)
+#         # Define DataLoaders
+#         self.train_dataloader = DataLoader(self.train_data, batch_size=32, shuffle=True)
+#         self.test_dataloader = DataLoader(self.test_data, batch_size=32, shuffle=False)
 
-        # Feature count
-        self.feature_count = multivariate_data.shape[1]
+#         # Feature count
+#         self.feature_count = multivariate_data.shape[1]
 
-        # Expanded feature names
-        expanded_feature_names = []
-        for feature in self.file_names:
-            for eng_feature in features:
-                expanded_feature_names.append(f"{feature} - {eng_feature}")
-        self.feature_names = expanded_feature_names
+#         # Expanded feature names
+#         expanded_feature_names = []
+#         for feature in self.file_names:
+#             for eng_feature in features:
+#                 expanded_feature_names.append(f"{feature} - {eng_feature}")
+#         self.feature_names = expanded_feature_names
 
-    def get_timestamps(self):
-        return self.timestamps_train, self.timestamps_test
+#     def get_timestamps(self):
+#         return self.timestamps_train, self.timestamps_test
 
-    def __len__(self):
-        return len(self.train_data)
+#     def __len__(self):
+#         return len(self.train_data)
 
-    def __getitem__(self, idx):
-        return self.train_data[idx]
+#     def __getitem__(self, idx):
+#         return self.train_data[idx]
 
 
 

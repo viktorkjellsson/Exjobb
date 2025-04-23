@@ -5,12 +5,13 @@ from pathlib import Path
 # Model configurations
 # =============================
 
-# Model features
-FEATURES = ['Strain', 
-            'Temperature',
-            'Rolling_mean', 
-            'Rolling_std']
-# FEATURES = ['Strain']
+# # Model features
+# FEATURES = ['Strain', 
+#             'Temperature',
+#             'Rolling_mean', 
+#             'Rolling_std']
+# FEATURES = ['Strain', 'Temperature']
+FEATURES = ['Strain']
 
 
 # Model parameters
