@@ -179,7 +179,9 @@ def plot_reconstruction(dataset, model, N, feature_names, timestamps, mode, ncol
     if len(reconstructed.shape) == 3:  # Ensure reconstructed matches shape
         reconstructed = reconstructed[:, -1, :]
 
-    num_features = data_subset.shape[1]  # Number of features
+    num_features = reconstructed.shape[1]  # Number of features
+    print(f"Number of features: {num_features}")
+    # num_features = 5
 
     # Ensure feature names are valid
     feature_names = feature_names or [f"Feature {i+1}" for i in range(num_features)]
@@ -188,8 +190,11 @@ def plot_reconstruction(dataset, model, N, feature_names, timestamps, mode, ncol
     # Determine subplot grid
     nrows = int(np.ceil(num_features / ncol))
     fig, axes = plt.subplots(nrows=nrows, ncols=ncol, figsize=(20 * ncol, 4 * nrows))
-    axes = axes.flatten()
+    # axes = axes.flatten()
 
+    if num_features == 1:
+        axes = [axes]  # Make it a list to handle it like a loop
+    plt_idx = 0
     for i, ax in enumerate(axes):
         if i < num_features:
             feature_name = feature_names[i]
@@ -205,6 +210,8 @@ def plot_reconstruction(dataset, model, N, feature_names, timestamps, mode, ncol
             ax.plot(timestamps, data_subset[:, i], label="True", alpha=0.8)
             ax.plot(timestamps, reconstructed[:, i], label="Reconstructed", alpha=0.8)
             ax.plot(timestamps, error, label="Anomaly Score", alpha=0.8)
+            print(f'plt_idx: {plt_idx}, i: {i}')
+            plt_idx += 4
             
             # Plot the rolling mean error with a distinct label
             ax.plot(timestamps[window_size - 1:], rolling_mean_error, label="Rolling Mean Error", alpha=0.8, color='green')

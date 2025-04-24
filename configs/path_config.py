@@ -6,12 +6,13 @@ from pathlib import Path
 # =============================
 
 # # Model features
-# FEATURES = ['Strain', 
-#             'Temperature',
-#             'Rolling_mean', 
-#             'Rolling_std']
-# FEATURES = ['Strain', 'Temperature']
-FEATURES = ['Strain']
+
+INPUT_FEATURES = ['Strain', 
+                'Temperature',
+                'Rolling_mean', 
+                'Rolling_std']
+
+OUTPUT_FEATURES = ['Strain']
 
 
 # Model parameters

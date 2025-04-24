@@ -14,7 +14,7 @@ from src.processing import preprocessing
 
 
 class StrainDataset(Dataset):
-    def __init__(self, folder_path, features, sequence_length, start_idx, test_size):
+    def __init__(self, folder_path, INPUT_FEATURES, OUTPUT_FEATURES, sequence_length, start_idx, test_size):
         print("Initializing StrainDataset...")
 
         self.file_names = []  # Store file names
@@ -49,8 +49,8 @@ class StrainDataset(Dataset):
             test_df = preprocessing.add_features(test_df, column="Strain")
 
             # Extract features
-            train_features = train_df[features].fillna(0).to_numpy()
-            test_features = test_df[features].fillna(0).to_numpy()
+            train_features = train_df[INPUT_FEATURES].fillna(0).to_numpy()
+            test_features = test_df[INPUT_FEATURES].fillna(0).to_numpy()
             train_data_list.append(train_features)
             test_data_list.append(test_features)
 
@@ -99,10 +99,23 @@ class StrainDataset(Dataset):
         # Feature name expansion
         expanded_feature_names = []
         for sensor_name in self.file_names:
-            for f in features:
+            for f in INPUT_FEATURES:
                 expanded_feature_names.append(f"{sensor_name} - {f}")
         self.feature_names = expanded_feature_names
         self.feature_count = train_data.shape[1]
+
+        # Store input and output feature names with sensor prefixes
+        self.input_feature_names = []
+        self.output_feature_names = []
+
+        for sensor_name in self.file_names:
+            self.input_feature_names.extend([f"{sensor_name} - {f}" for f in INPUT_FEATURES])
+            self.output_feature_names.extend([f"{sensor_name} - {f}" for f in OUTPUT_FEATURES])
+
+        # Optional: keep a generic feature_names alias for backwards compatibility
+        self.feature_names = self.input_feature_names
+        self.input_feature_count = len(self.input_feature_names)
+        self.output_feature_count = len(self.output_feature_names)
 
     def get_timestamps(self):
         return self.timestamps_train, self.timestamps_test
@@ -112,6 +125,7 @@ class StrainDataset(Dataset):
 
     def __getitem__(self, idx):
         return self.train_data[idx]
+
 
 
 # 2025-04-22 safe split, feature engineering still on the entire dataset
