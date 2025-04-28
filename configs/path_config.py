@@ -7,10 +7,12 @@ from pathlib import Path
 
 # # Model features
 
+# INPUT_FEATURES = ['Strain', 
+#                 'Temperature',
+#                 'Rolling_mean', 
+#                 'Rolling_std']
 INPUT_FEATURES = ['Strain', 
-                'Temperature',
-                'Rolling_mean', 
-                'Rolling_std']
+                'Temperature']
 
 OUTPUT_FEATURES = ['Strain']
 

@@ -39,14 +39,16 @@ def training_loop(
     model_folder, 
     model_name, 
     input_features, 
-    output_features
+    output_features, 
+    input_feature_names,
+    output_feature_names 
 ):
     
     # Get feature indices once
-    # input_indices = [input_features.index(f) for f in input_features]
-    # output_indices = [input_features.index(f) for f in output_features]
-    input_indices = list(range(20))  # Select first 20 features
-    output_indices = list(range(0, 19, 4))
+    input_indices = [input_feature_names.index(f) for f in input_feature_names]
+    output_indices = [input_feature_names.index(f) for f in output_feature_names]
+    # input_indices = list(range(20))  # Select first 20 features
+    # output_indices = list(range(0, 19, 4))
     print(f"Input indices: {input_indices}, Output indices: {output_indices}")
 
     criterion = nn.MSELoss()

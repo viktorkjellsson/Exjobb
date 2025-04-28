@@ -139,7 +139,7 @@ def calculate_anomalous_regions(original, reconstructed, mode, k=1, n=18, error_
 
 
 
-def plot_reconstruction(dataset, model, N, feature_names, timestamps, mode, ncol=1):
+def plot_reconstruction(dataset, model, N, input_feature_names, output_feature_names, timestamps, mode, ncol=1):
     """
     Plot true vs reconstructed values for every feature over N steps using subplots.
 
@@ -147,7 +147,7 @@ def plot_reconstruction(dataset, model, N, feature_names, timestamps, mode, ncol
     - dataset: Dataset or DataLoader containing the input data.
     - model: Trained autoencoder model.
     - N: Number of steps to plot.
-    - feature_names: List of feature names (optional).
+    - output_feature_names: List of feature names (optional).
     - mode: Mode of anomaly detection (1 for absolute difference, 2 for consecutive anomalies).
     - ncol: Number of columns in the subplot grid.
     """
@@ -179,67 +179,70 @@ def plot_reconstruction(dataset, model, N, feature_names, timestamps, mode, ncol
     if len(reconstructed.shape) == 3:  # Ensure reconstructed matches shape
         reconstructed = reconstructed[:, -1, :]
 
-    num_features = reconstructed.shape[1]  # Number of features
-    print(f"Number of features: {num_features}")
-    # num_features = 5
+    # # Ensure feature names are valid
+    # feature_names = feature_names or [f"Feature {i+1}" for i in range(num_features)]
+    # print("Features----------------------------------\n" + "\n".join(feature_names))
 
-    # Ensure feature names are valid
-    feature_names = feature_names or [f"Feature {i+1}" for i in range(num_features)]
-    print("Features----------------------------------\n" + "\n".join(feature_names))
+    output_indices = [input_feature_names.index(f) for f in output_feature_names]
+    print(f"Output indices: {output_indices}")
+
+    num_features = len(output_indices)
+    print(f"Number of features: {num_features}")
+    print(f"Output feature names: {output_feature_names}")
 
     # Determine subplot grid
     nrows = int(np.ceil(num_features / ncol))
     fig, axes = plt.subplots(nrows=nrows, ncols=ncol, figsize=(20 * ncol, 4 * nrows))
     # axes = axes.flatten()
 
-    if num_features == 1:
+    if len(output_indices) == 1:
         axes = [axes]  # Make it a list to handle it like a loop
     plt_idx = 0
-    for i, ax in enumerate(axes):
-        if i < num_features:
-            feature_name = feature_names[i]
+    for i, ax in zip(output_indices, axes):
+        # if i < num_features:
+        feature_name = input_feature_names[i]
+        print(f"Feature Name: {feature_name}")
+        print(f"Feature Index: {i}")
 
-            # Calculate anomalies and threshold
-            window_size = 18
-            anomalous_indices, threshold, error, rolling_mean_error = calculate_anomalous_regions(data_subset[:, i], reconstructed[:, i], mode=mode)
-            df_anomalies = sort_anomalies(anomalous_indices, timestamps)
-            print(f'\n{feature_name} Anomalies:\n{df_anomalies}')
-            
+        # Calculate anomalies and threshold
+        window_size = 18
+        anomalous_indices, threshold, error, rolling_mean_error = calculate_anomalous_regions(data_subset[:, i], reconstructed[:, i], mode=mode)
+        df_anomalies = sort_anomalies(anomalous_indices, timestamps)
+        print(f'\n{feature_name} Anomalies:\n{df_anomalies}')
+        
 
-            # Plot the true data, reconstructed data, and error
-            ax.plot(timestamps, data_subset[:, i], label="True", alpha=0.8)
-            ax.plot(timestamps, reconstructed[:, i], label="Reconstructed", alpha=0.8)
-            ax.plot(timestamps, error, label="Anomaly Score", alpha=0.8)
-            print(f'plt_idx: {plt_idx}, i: {i}')
-            plt_idx += 4
-            
-            # Plot the rolling mean error with a distinct label
-            ax.plot(timestamps[window_size - 1:], rolling_mean_error, label="Rolling Mean Error", alpha=0.8, color='green')
+        # Plot the true data, reconstructed data, and error
+        ax.plot(timestamps, data_subset[:, i], label="True", alpha=0.8)
+        ax.plot(timestamps, reconstructed[:, i], label="Reconstructed", alpha=0.8)
+        ax.plot(timestamps, error, label="Anomaly Score", alpha=0.8)
+        print(f'plt_idx: {plt_idx}, i: {i}')
+        plt_idx += 4
+        
+        # Plot the rolling mean error with a distinct label
+        ax.plot(timestamps[window_size - 1:], rolling_mean_error, label="Rolling Mean Error", alpha=0.8, color='green')
 
-            # Plot the threshold line
-            ax.axhline(y=threshold, color='red', linestyle='--', label='Threshold', alpha=0.6)
+        # Plot the threshold line
+        ax.axhline(y=threshold, color='red', linestyle='--', label='Threshold', alpha=0.6)
 
-            # Highlight anomalous regions
-            anomalous_region_mask = np.zeros_like(error, dtype=bool)
-            anomalous_region_mask[anomalous_indices] = True
-            ax.fill_between(timestamps, 0, 1, where=anomalous_region_mask, color='red', alpha=0.3, label='Anomalous Region')
+        # Highlight anomalous regions
+        anomalous_region_mask = np.zeros_like(error, dtype=bool)
+        anomalous_region_mask[anomalous_indices] = True
+        ax.fill_between(timestamps, 0, 1, where=anomalous_region_mask, color='red', alpha=0.3, label='Anomalous Region')
 
-            # Set plot titles, labels, and grid
-            ax.set_title(feature_name)
-            ax.set_xlabel("Time")
-            ax.set_ylabel("Value")
-            ax.legend()
-            ax.grid()
+        # Set plot titles, labels, and grid
+        ax.set_title(feature_name)
+        ax.set_xlabel("Time")
+        ax.set_ylabel("Value")
+        ax.legend()
+        ax.grid()
 
-            # Format the x-axis to show months
-            ax.xaxis.set_major_locator(mdates.MonthLocator())  # Group by month
-            ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))  # Format to 'Year-Month'
+        # Format the x-axis to show months
+        ax.xaxis.set_major_locator(mdates.MonthLocator())  # Group by month
+        ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))  # Format to 'Year-Month'
 
-            # Adjust x-tick labels for better readability
-            ax.set_xticks(ax.get_xticks())  # Get current tick positions
-            ax.set_xticklabels([mdates.DateFormatter('%Y-%m').format_data(t) for t in ax.get_xticks()], rotation=45)
-        else:
-            ax.axis("off")  # Hide unused subplots
+        # Adjust x-tick labels for better readability
+        ax.set_xticks(ax.get_xticks())  # Get current tick positions
+        ax.set_xticklabels([mdates.DateFormatter('%Y-%m').format_data(t) for t in ax.get_xticks()], rotation=45)
 
     # Adjust layout and show the plot
     plt.tight_layout()
@@ -248,7 +251,7 @@ def plot_reconstruction(dataset, model, N, feature_names, timestamps, mode, ncol
     return reconstructed
 
 
-def anomaly_score(test, reconstructed, timestamps, feature_names, N, ncol=2):
+def anomaly_score(test, reconstructed, timestamps, output_feature_names, N, ncol=2):
     """
     Calculate and plot anomaly scores for all features.
 
@@ -256,7 +259,7 @@ def anomaly_score(test, reconstructed, timestamps, feature_names, N, ncol=2):
     - original: Original data (numpy array, shape: [n_samples, n_features]).
     - reconstructed: Reconstructed data (numpy array, shape: [n_samples, n_features]).
     - timestamps: Timestamps for the x-axis (numpy array).
-    - feature_names: List of feature names.
+    - output_feature_names: List of feature names.
     - ncol: Number of columns in the subplot grid.
     """
 
@@ -273,7 +276,7 @@ def anomaly_score(test, reconstructed, timestamps, feature_names, N, ncol=2):
         anomaly_scores = np.abs(test[:,i] - reconstructed[:,i])
 
 
-        feature_names = feature_names or [f"Feature {i+1}" for i in range(num_features)]
+        output_feature_names = output_feature_names or [f"Feature {i+1}" for i in range(num_features)]
 
     # Determine subplot grid
     nrows = int(np.ceil(num_features / ncol))

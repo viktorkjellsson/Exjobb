@@ -36,7 +36,7 @@ class StrainDataset(Dataset):
             df["Time"] = pd.to_datetime(df["Time"], errors="coerce")
 
             # Apply preprocessing
-            df = preprocessing.preprocessing_pipeline(df, interpolate_threshold=0)
+            df = preprocessing.preprocessing_pipeline(df, interpolate_threshold=50)
 
             # Split BEFORE feature engineering
             split_idx = int(len(df) * (1 - test_size))
@@ -60,20 +60,58 @@ class StrainDataset(Dataset):
         # Concatenate data from all sensors (horizontally)
         train_data = np.concatenate(train_data_list, axis=1)
         test_data = np.concatenate(test_data_list, axis=1)
+        self.train_df = train_df.copy()
+        self.test_df = test_df.copy()
         print(f"Train shape: {train_data.shape}, Test shape: {test_data.shape}")
 
-        # Apply MinMaxScaler to each feature independently
-        train_scaled = np.zeros_like(train_data)
-        test_scaled = np.zeros_like(test_data)
-        print(f"Train scaled shape: {train_scaled.shape}, Test scaled shape: {test_scaled.shape}")
+                # Feature name expansion
+        expanded_feature_names = []
+        for sensor_name in self.file_names:
+            for f in INPUT_FEATURES:
+                expanded_feature_names.append(f"{sensor_name} - {f}")
+        self.feature_names = expanded_feature_names
+        self.feature_count = train_data.shape[1]
 
+        # # Optional: keep a generic feature_names alias for backwards compatibility
+        # self.input_feature_names = self.input_feature_names
 
-        for i, feature in enumerate(INPUT_FEATURES):
+        # # Store input and output feature names with sensor prefixes
+        self.input_feature_names = []
+        self.output_feature_names = []
+
+        for sensor_name in self.file_names:
+            self.input_feature_names.extend([f"{sensor_name} - {f}" for f in INPUT_FEATURES])
+            self.output_feature_names.extend([f"{sensor_name} - {f}" for f in OUTPUT_FEATURES])
+
+        self.input_feature_count = len(self.input_feature_names)
+        self.output_feature_count = len(self.output_feature_names)
+
+        train_scaled = train_data.copy()
+        test_scaled = test_data.copy()
+        print(f'Number of features: {len(INPUT_FEATURES)}')
+        scaler = MinMaxScaler()
+        for feature in INPUT_FEATURES:
+            print(f'Feature: {feature}')
+            feature_idx = [i for i, name in enumerate(self.input_feature_names) if feature in name]
+            print(f"Feature indices {feature}: {feature_idx}")
+
             # Fit the scaler on the training data for each feature
-            train_scaled[:, i] = scalers[feature].fit_transform(train_data[:, i].reshape(-1, 1)).flatten()
-            test_scaled[:, i] = scalers[feature].transform(test_data[:, i].reshape(-1, 1)).flatten()
+            train_scaled[:, feature_idx] = scaler.fit_transform(train_data[:, feature_idx])
+            test_scaled[:, feature_idx] = scaler.transform(test_data[:, feature_idx])
+            print(f"Train data shape after scaling: {train_data.shape}, Test data shape after scaling: {test_data.shape}")
 
-        print(f"Train scaled shape after scaling: {train_scaled.shape}, Test scaled shape after scaling: {test_scaled.shape}")
+        # # Apply MinMaxScaler to each feature independently
+        # train_scaled = np.zeros_like(train_data)
+        # test_scaled = np.zeros_like(test_data)
+        # print(f"Train scaled shape: {train_scaled.shape}, Test scaled shape: {test_scaled.shape}")
+
+
+        # for i, feature in enumerate(INPUT_FEATURES):
+        #     # Fit the scaler on the training data for each feature
+        #     train_scaled[:, i] = scalers[feature].fit_transform(train_data[:, i].reshape(-1, 1)).flatten()
+        #     test_scaled[:, i] = scalers[feature].transform(test_data[:, i].reshape(-1, 1)).flatten()
+
+        # print(f"Train scaled shape after scaling: {train_scaled.shape}, Test scaled shape after scaling: {test_scaled.shape}")
 
         # Generate sequences (rolling window approach)
         train_sequences = [train_scaled[i:i + sequence_length] for i in range(len(train_scaled) - sequence_length)]
@@ -106,27 +144,6 @@ class StrainDataset(Dataset):
             print("Overlapping sequences detected! Potential data leakage.")
         else:
             print("No overlapping sequences detected. Train-test split is clean.")
-
-        # Feature name expansion
-        expanded_feature_names = []
-        for sensor_name in self.file_names:
-            for f in INPUT_FEATURES:
-                expanded_feature_names.append(f"{sensor_name} - {f}")
-        self.feature_names = expanded_feature_names
-        self.feature_count = train_data.shape[1]
-
-        # Store input and output feature names with sensor prefixes
-        self.input_feature_names = []
-        self.output_feature_names = []
-
-        for sensor_name in self.file_names:
-            self.input_feature_names.extend([f"{sensor_name} - {f}" for f in INPUT_FEATURES])
-            self.output_feature_names.extend([f"{sensor_name} - {f}" for f in OUTPUT_FEATURES])
-
-        # Optional: keep a generic feature_names alias for backwards compatibility
-        self.feature_names = self.input_feature_names
-        self.input_feature_count = len(self.input_feature_names)
-        self.output_feature_count = len(self.output_feature_names)
 
     def get_timestamps(self):
         return self.timestamps_train, self.timestamps_test

@@ -25,7 +25,7 @@ def preprocessing_pipeline(df, interpolate_threshold):
 
     df_filled = interpolate_nan.interpolate(df, nan_regions_sorted, interpolate_threshold)
 
-    # df = df_filled
+    df = df_filled
 
     # Add function that scales the data here
 

@@ -8,40 +8,48 @@ A function that finds the outliers in the raw data and replaces them with NaN. I
 
 def clean_zeros_outliers(df):
 
-    #Find values of strain that are exactly zero
-    df_zero = df[df["Strain"] == 0]
-    # print(f'{df_zero.shape[0]} zeros to replace with NaN')
-
     # Remove rows with strain values of zero by replacing with NaN
     df = df.copy()
     df.loc[df["Strain"] == 0, "Strain"] = np.nan
 
-    # Compute IQR
-    Q1 = df['Strain'].quantile(0.25)  # 25th percentile
-    Q3 = df['Strain'].quantile(0.75)  # 75th percentile
-    IQR = Q3 - Q1
+    # Compute IQR for the 'Strain' column
+    Q1_strain = df['Strain'].quantile(0.25)  # 25th percentile
+    Q3_strain = df['Strain'].quantile(0.75)  # 75th percentile
+    IQR_strain = Q3_strain - Q1_strain
 
     # Define bounds for extreme outliers
-    lower_bound = Q1 - 1.5 * IQR
-    lower_bound_extreme = Q1 - 6 * IQR
-    upper_bound = Q3 + 1.5 * IQR
-    upper_bound_extreme = Q3 + 6 * IQR
+    lower_bound_strain = Q1_strain - 1.5 * IQR_strain
+    lower_bound_extreme_strain = Q1_strain - 3 * IQR_strain
+    upper_bound_strain = Q3_strain + 1.5 * IQR_strain
+    upper_bound_extreme_strain = Q3_strain + 3 * IQR_strain
 
-    mild_outliers = df[(df['Strain'] < lower_bound) | (df['Strain'] > upper_bound)]
-    mild_outlier_indices = mild_outliers.index  # Save the indices of mild outliers
-    num_mild_outliers = mild_outliers.shape[0]
+    # Compute IQR for the 'Temperature' column
+    Q1_temp = df['Temperature'].quantile(0.25)  # 25th percentile
+    Q3_temp = df['Temperature'].quantile(0.75)  # 75th percentile
+    IQR_temp = Q3_temp - Q1_temp
+
+    # Define bounds for extreme outliers
+    lower_bound_temp = Q1_temp - 1.5 * IQR_temp
+    lower_bound_extreme_temp = Q1_temp - 3 * IQR_temp
+    upper_bound_temp = Q3_temp + 1.5 * IQR_temp
+    upper_bound_extreme_temp = Q3_temp + 3 * IQR_temp
+
+    # Count mild outliers (outside 1.5 * IQR)
+    mild_outliers_strain = df[(df['Strain'] < lower_bound_strain) | (df['Strain'] > upper_bound_strain)]
+    mild_outliers_temp = df[(df['Temperature'] < lower_bound_temp) | (df['Temperature'] > upper_bound_temp)]
+    mild_outlier_indices_strain = mild_outliers_strain.index
+    mild_outlier_indices_temp = mild_outliers_temp.index
 
     # Count extreme outliers (outside 3 * IQR)
-    extreme_outliers = df[(df['Strain'] < lower_bound_extreme) | (df['Strain'] > upper_bound_extreme)]
-    extreme_outlier_indices = extreme_outliers.index  # Save the indices of extreme outliers
-    num_extreme_outliers = extreme_outliers.shape[0]
+    extreme_outliers_strain = df[(df['Strain'] < lower_bound_extreme_strain) | (df['Strain'] > upper_bound_extreme_strain)]
+    extreme_outliers_temp = df[(df['Temperature'] < lower_bound_extreme_temp) | (df['Temperature'] > upper_bound_extreme_temp)]
+    extreme_outlier_indices_strain = extreme_outliers_strain.index 
+    extreme_outlier_indices_temp = extreme_outliers_temp.index
 
-    # Print results
-    # print(f'Number of mild outliers (1.5 × IQR): {num_mild_outliers}')
-    # print(f'Number of extreme outliers (3 × IQR): {num_extreme_outliers}')
-
-    # Replace extreme outliers with NaN
-    df.loc[extreme_outlier_indices, 'Strain'] = np.nan  # Using np.nan to replace the outlier values
+    # Replace outliers with NaN
+    df.loc[mild_outlier_indices_strain, 'Strain'] = np.nan  # Using np.nan to replace the outlier values
+    df.loc[mild_outlier_indices_temp, 'Temperature'] = np.nan  # Using np.nan to replace the outlier values
+    print(f'Number of mild outliers replaced with NaN: \n  For strain: {len(mild_outlier_indices_strain)}\n  For temperature: {len(mild_outlier_indices_temp)}')
     # print(f'Number of outliers replaced with NaN: {len(mild_outlier_indices)}')
 
 
