@@ -23,6 +23,9 @@ class StrainDataset(Dataset):
         train_timestamps = []
         test_timestamps = []
 
+        # Initialize a dictionary to store a MinMaxScaler for each feature
+        scalers = {feature: MinMaxScaler() for feature in INPUT_FEATURES}
+
         for file in folder_path.glob("*.csv"):
             print(f"Processing file: {file}")
             self.file_names.append(file.stem)
@@ -59,28 +62,40 @@ class StrainDataset(Dataset):
         test_data = np.concatenate(test_data_list, axis=1)
         print(f"Train shape: {train_data.shape}, Test shape: {test_data.shape}")
 
-        # Rolling sequence generation
-        train_sequences = [train_data[i:i + sequence_length] for i in range(len(train_data) - sequence_length)]
-        test_sequences = [test_data[i:i + sequence_length] for i in range(len(test_data) - sequence_length)]
+        # Apply MinMaxScaler to each feature independently
+        train_scaled = np.zeros_like(train_data)
+        test_scaled = np.zeros_like(test_data)
+        print(f"Train scaled shape: {train_scaled.shape}, Test scaled shape: {test_scaled.shape}")
 
-        # Convert to NumPy
+
+        for i, feature in enumerate(INPUT_FEATURES):
+            # Fit the scaler on the training data for each feature
+            train_scaled[:, i] = scalers[feature].fit_transform(train_data[:, i].reshape(-1, 1)).flatten()
+            test_scaled[:, i] = scalers[feature].transform(test_data[:, i].reshape(-1, 1)).flatten()
+
+        print(f"Train scaled shape after scaling: {train_scaled.shape}, Test scaled shape after scaling: {test_scaled.shape}")
+
+        # Generate sequences (rolling window approach)
+        train_sequences = [train_scaled[i:i + sequence_length] for i in range(len(train_scaled) - sequence_length)]
+        test_sequences = [test_scaled[i:i + sequence_length] for i in range(len(test_scaled) - sequence_length)]
+
+        # Convert to NumPy arrays
         train_sequences_np = np.array(train_sequences)
         test_sequences_np = np.array(test_sequences)
 
-        # Scale based on training data only
-        scaler = MinMaxScaler()
-        train_flat = train_sequences_np.reshape(train_sequences_np.shape[0], -1)
-        test_flat = test_sequences_np.reshape(test_sequences_np.shape[0], -1)
-        train_scaled = scaler.fit_transform(train_flat)
-        test_scaled = scaler.transform(test_flat)
+        print(f"Train sequences shape: {train_sequences_np.shape}, Test sequences shape: {test_sequences_np.shape}")
 
-        # Reshape back to [n_samples, sequence_length, n_features]
-        self.train_data = torch.tensor(train_scaled.reshape(-1, sequence_length, train_data.shape[1]), dtype=torch.float32)
-        self.test_data = torch.tensor(test_scaled.reshape(-1, sequence_length, test_data.shape[1]), dtype=torch.float32)
+        # Reshape back to [n_samples, sequence_length, n_features] if necessary
+        self.train_data = torch.tensor(train_sequences_np, dtype=torch.float32)
+        self.test_data = torch.tensor(test_sequences_np, dtype=torch.float32)
 
         # Store timestamps
-        self.timestamps_train = train_timestamps
-        self.timestamps_test = test_timestamps
+        self.timestamps_train = train_timestamps[:len(train_sequences_np)]
+        self.timestamps_test = test_timestamps[:len(test_sequences_np)]
+
+        # DataLoaders
+        self.train_dataloader = DataLoader(self.train_data, batch_size=32, shuffle=True)
+        self.test_dataloader = DataLoader(self.test_data, batch_size=32, shuffle=False)
 
         # Overlap check via hashing
         train_hashes = [hash(tuple(seq.numpy().flatten())) for seq in self.train_data]
@@ -88,13 +103,9 @@ class StrainDataset(Dataset):
         overlap_hashes = set(train_hashes).intersection(set(test_hashes))
         print(f"Number of overlapping hashes: {len(overlap_hashes)}")
         if overlap_hashes:
-            print("⚠️ Overlapping sequences detected! Potential data leakage.")
+            print("Overlapping sequences detected! Potential data leakage.")
         else:
-            print("✅ No overlapping sequences detected. Train-test split is clean.")
-
-        # DataLoaders
-        self.train_dataloader = DataLoader(self.train_data, batch_size=32, shuffle=True)
-        self.test_dataloader = DataLoader(self.test_data, batch_size=32, shuffle=False)
+            print("No overlapping sequences detected. Train-test split is clean.")
 
         # Feature name expansion
         expanded_feature_names = []
