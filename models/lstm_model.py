@@ -3,6 +3,8 @@ from torch import nn, optim
 from tqdm import tqdm 
 import sys
 from pathlib import Path
+import numpy as np
+import json
 
 # Add the root project directory to the Python path
 ROOT = Path.cwd().parent  # This will get the project root since the notebook is in 'notebooks/'
@@ -14,6 +16,12 @@ from src.train_logger import TrainingLogger
 class LSTMModel(nn.Module):
     def __init__(self, input_dim, output_dim, hidden_dim, num_layers, dropout):    
         super(LSTMModel, self).__init__()
+
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+        self.hidden_dim = hidden_dim
+        self.num_layers = num_layers
+        self.dropout_rate = dropout
 
         self.lstm = nn.LSTM(
             input_size=input_dim,
@@ -36,8 +44,8 @@ def training_loop(
     train_loader, 
     num_epochs, 
     learning_rate, 
-    model_folder, 
-    model_name, 
+    models_folder, 
+    # model_name, 
     input_features, 
     output_features, 
     input_feature_names,
@@ -47,8 +55,6 @@ def training_loop(
     # Get feature indices once
     input_indices = [input_feature_names.index(f) for f in input_feature_names]
     output_indices = [input_feature_names.index(f) for f in output_feature_names]
-    # input_indices = list(range(20))  # Select first 20 features
-    # output_indices = list(range(0, 19, 4))
     print(f"Input indices: {input_indices}, Output indices: {output_indices}")
 
     criterion = nn.MSELoss()
@@ -58,8 +64,12 @@ def training_loop(
     model.to(device)
     print(f"Using device: {device}")
 
+    model_folder = f'lstm_model_{model.input_dim}_{model.hidden_dim}_{model.num_layers}_{num_epochs}_{learning_rate}_{model.dropout_rate}'
+    model_folder_path = Path(models_folder) / model_folder  # Convert to Path object
+    model_name = model_folder_path / 'model.pth'  # Safe path concatenation
+
     # Initialize Logger
-    logger = TrainingLogger(log_dir=LOGS_DIR)
+    logger = TrainingLogger(log_dir=model_folder_path)
     logger.log_parameters(
         input_dim=model.lstm.input_size,
         output_dim=model.fc.out_features,
@@ -74,34 +84,48 @@ def training_loop(
     logger.start_timer()
 
     losses = []
+    epoch_losses = []
     for epoch in range(num_epochs):
         model.train()
-        epoch_loss = 0
-
-        # Wrap train_loader with tqdm to add a progress bar
         for batch_idx, batch in enumerate(tqdm(train_loader, desc=f"Epoch {epoch+1}/{num_epochs}", unit="batch")):
-            # Uncomment if needed: batch = batch.unsqueeze(-1).float()
-            # x = batch[:, :, input_indices].to(device)
-            x = batch.to(device)         # model input
-            y = batch[:, -1, output_indices].to(device)         # reconstruction target at last timestep
+            x = batch.to(device)  # model input
+            y = batch[:, -1, output_indices].to(device)  # reconstruction target at last timestep
             optimizer.zero_grad()
             prediction = model(x)
-            # loss = criterion(prediction, y)
             loss = criterion(prediction[:, output_indices], y)
             loss.backward()
             optimizer.step()
 
-            epoch_loss += loss.item()
+            # Append batch loss to epoch_losses
+            epoch_losses.append(loss.item())
 
-        avg_loss = epoch_loss / len(train_loader)
+        # Calculate the average loss using np.mean
+        avg_loss = np.mean(epoch_losses)
         losses.append(avg_loss)
         logger.log_epoch_loss(epoch, avg_loss)
         print(f"\nEpoch {epoch+1}/{num_epochs}, Average Loss: {avg_loss:.6f}\n")
+
+
+    # After training, calculate the mean and standard deviation of errors
+    mean_error = avg_loss  # Mean of all per-batch losses
+    std_error = np.std(epoch_losses)    # Standard deviation of all per-batch losses
+
+    print(f"Mean error: {mean_error:.4f}\nStandard deviation error: {std_error:.4f}")
+
+    save_path = models_folder / model_folder / "threshold.json"
+    save_path.parent.mkdir(parents=True, exist_ok=True)  # Create directories if they don't exist
+
+    with open(save_path, 'w') as f:
+        json.dump({
+            'mean_error': float(mean_error),
+            'std_error': float(std_error)
+        }, f)
     
+    # Save the model
+    savepath =  models_folder / model_folder / model_name
+    torch.save(model, savepath)
+
     logger.end_timer()
     logger.save_log()
-    
-    savepath =  model_folder / model_name
-    torch.save(model, savepath)
     
     return losses, prediction

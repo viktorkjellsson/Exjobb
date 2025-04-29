@@ -1,0 +1,43 @@
+{
+    "parameters": {
+        "input_dim": 6,
+        "output_dim": 6,
+        "hidden_dim": 32,
+        "num_layers": 1,
+        "learning_rate": 0.001,
+        "num_epochs": 5,
+        "dropout": 0.3,
+        "input_features": [
+            "Strain",
+            "Temperature"
+        ],
+        "output_features": [
+            "Strain"
+        ]
+    },
+    "start_time": "2025-04-29 15:25",
+    "end_time": "2025-04-29 15:25",
+    "training_duration": "0h 0m 23.67s",
+    "epoch_losses": [
+        {
+            "epoch": 1,
+            "loss": 0.03307474932932404
+        },
+        {
+            "epoch": 2,
+            "loss": 0.01026634578747483
+        },
+        {
+            "epoch": 3,
+            "loss": 0.007517320493213429
+        },
+        {
+            "epoch": 4,
+            "loss": 0.005581227581408428
+        },
+        {
+            "epoch": 5,
+            "loss": 0.0042559308402994435
+        }
+    ]
+}

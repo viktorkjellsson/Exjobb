@@ -4,6 +4,19 @@ import torch
 import numpy as np
 import matplotlib.dates as mdates
 import pandas as pd
+import json
+
+def load_model_and_threshold(model_path):
+    model = torch.load(model_path / 'model.pth')
+    model.eval()
+
+    with open(model_path / 'threshold.json', 'r') as f:
+        threshold_data = json.load(f)
+    
+    mean_error = threshold_data.get('mean_error', None)  # Extract the mean error value from training
+    std_error = threshold_data.get('std_error', None)  # Extract the standard deviation error value from training
+
+    return model, mean_error, std_error
 
 def plot_epochs_loss(num_epochs, losses):
 
@@ -14,25 +27,6 @@ def plot_epochs_loss(num_epochs, losses):
     plt.title('Training Loss Over Epochs')
     plt.grid(True)
     plt.show()
-
-
-# def plot_lstm_results(train_data, prediction, timestamps):
-#     train_data_np = train_data.numpy()
-#     prediction_np = prediction.detach().numpy()
-
-#     fig = go.Figure()
-
-#     fig.add_trace(go.Scatter(x=timestamps, y=train_data_np, mode='lines', name='Original Data'))
-
-#     fig.add_trace(go.Scatter(x=timestamps, y=prediction_np, mode='lines', name='Reconstructed Data'))
-
-#     fig.update_layout(
-#         title='LSTM Reconstruction vs. Original Data',
-#         xaxis_title='Time',
-#         yaxis_title='Strain',
-#         template='plotly_white')
-
-#     fig.show()
 
 
 def sort_anomalies(anomalous_indices, timestamps):
@@ -82,7 +76,7 @@ def sort_anomalies(anomalous_indices, timestamps):
     return df_anomalies
 
 
-def calculate_anomalous_regions(original, reconstructed, mode, k=1, n=18, error_threshold=0.1):
+def calculate_anomalous_regions(original, reconstructed, threshold, mode, k=1, n=18):
     """
     Calculate anomalous regions based on the difference between original and reconstructed data.
 
@@ -100,8 +94,6 @@ def calculate_anomalous_regions(original, reconstructed, mode, k=1, n=18, error_
     """
     error = np.abs(original - reconstructed)  # Calculate absolute error
     rolling_mean_error = np.convolve(error, np.ones((n,))/n, mode='valid')  # Rolling mean error
-
-    threshold = np.mean(error) + k * np.std(error)  # Define the threshold for anomaly detection
 
     if mode == 1:
         anomalous_points = error > threshold
@@ -139,7 +131,7 @@ def calculate_anomalous_regions(original, reconstructed, mode, k=1, n=18, error_
 
 
 
-def plot_reconstruction(dataset, model, N, input_feature_names, output_feature_names, timestamps, mode, ncol=1):
+def plot_reconstruction(dataset, model, N, input_feature_names, output_feature_names, timestamps, threshold, mode, ncol=1):
     """
     Plot true vs reconstructed values for every feature over N steps using subplots.
 
@@ -206,7 +198,7 @@ def plot_reconstruction(dataset, model, N, input_feature_names, output_feature_n
 
         # Calculate anomalies and threshold
         window_size = 18
-        anomalous_indices, threshold, error, rolling_mean_error = calculate_anomalous_regions(data_subset[:, i], reconstructed[:, i], mode=mode)
+        anomalous_indices, threshold, error, rolling_mean_error = calculate_anomalous_regions(data_subset[:, i], reconstructed[:, i], threshold, mode=mode)
         df_anomalies = sort_anomalies(anomalous_indices, timestamps)
         print(f'\n{feature_name} Anomalies:\n{df_anomalies}')
         
