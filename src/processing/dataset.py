@@ -35,9 +35,6 @@ class StrainDataset(Dataset):
             df = df.iloc[start_idx:-1].copy()
             df["Time"] = pd.to_datetime(df["Time"], errors="coerce")
 
-            # Apply preprocessing
-            df = preprocessing.preprocessing_pipeline(df, interpolate_threshold=50)
-
             # Split BEFORE feature engineering
             split_idx = int(len(df) * (1 - test_size))
             train_df = df.iloc[:split_idx].copy()
@@ -46,6 +43,9 @@ class StrainDataset(Dataset):
             # Save timestamps
             train_timestamps.extend(train_df["Time"].values)
             test_timestamps.extend(test_df["Time"].values)
+
+            train_df = preprocessing.preprocessing_pipeline(train_df, interpolate_threshold=50)
+            test_df = preprocessing.preprocessing_pipeline(test_df, interpolate_threshold=50)
 
             # Apply feature engineering independently
             train_df = preprocessing.add_features(train_df, column="Strain")
@@ -99,19 +99,6 @@ class StrainDataset(Dataset):
             train_scaled[:, feature_idx] = scaler.fit_transform(train_data[:, feature_idx])
             test_scaled[:, feature_idx] = scaler.transform(test_data[:, feature_idx])
             print(f"Train data shape after scaling: {train_data.shape}, Test data shape after scaling: {test_data.shape}")
-
-        # # Apply MinMaxScaler to each feature independently
-        # train_scaled = np.zeros_like(train_data)
-        # test_scaled = np.zeros_like(test_data)
-        # print(f"Train scaled shape: {train_scaled.shape}, Test scaled shape: {test_scaled.shape}")
-
-
-        # for i, feature in enumerate(INPUT_FEATURES):
-        #     # Fit the scaler on the training data for each feature
-        #     train_scaled[:, i] = scalers[feature].fit_transform(train_data[:, i].reshape(-1, 1)).flatten()
-        #     test_scaled[:, i] = scalers[feature].transform(test_data[:, i].reshape(-1, 1)).flatten()
-
-        # print(f"Train scaled shape after scaling: {train_scaled.shape}, Test scaled shape after scaling: {test_scaled.shape}")
 
         # Generate sequences (rolling window approach)
         train_sequences = [train_scaled[i:i + sequence_length] for i in range(len(train_scaled) - sequence_length)]

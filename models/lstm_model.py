@@ -45,7 +45,7 @@ def training_loop(
     num_epochs, 
     learning_rate, 
     models_folder, 
-    # model_name, 
+    model_subname, 
     input_features, 
     output_features, 
     input_feature_names,
@@ -64,9 +64,10 @@ def training_loop(
     model.to(device)
     print(f"Using device: {device}")
 
-    model_folder = f'lstm_model_{model.input_dim}_{model.hidden_dim}_{model.num_layers}_{num_epochs}_{learning_rate}_{model.dropout_rate}'
-    model_folder_path = Path(models_folder) / model_folder  # Convert to Path object
-    model_name = model_folder_path / 'model.pth'  # Safe path concatenation
+    model_folder = f'lstm_model_{model_subname}_{model.input_dim}_{model.hidden_dim}_{model.num_layers}_{num_epochs}_{learning_rate}_{model.dropout_rate}'
+    model_folder_path = Path(models_folder) / model_folder
+    model_folder_path.mkdir(parents=True, exist_ok=True)  # Ensure it exists
+    # model_name = model_folder_path / model_subname / 'model.pth'  # Safe path concatenation
 
     # Initialize Logger
     logger = TrainingLogger(log_dir=model_folder_path)
@@ -112,18 +113,13 @@ def training_loop(
 
     print(f"Mean error: {mean_error:.4f}\nStandard deviation error: {std_error:.4f}")
 
-    save_path = models_folder / model_folder / "threshold.json"
-    save_path.parent.mkdir(parents=True, exist_ok=True)  # Create directories if they don't exist
-
-    with open(save_path, 'w') as f:
-        json.dump({
-            'mean_error': float(mean_error),
-            'std_error': float(std_error)
-        }, f)
+    threshold_path = model_folder_path / 'threshold.json'
+    with open(threshold_path, 'w') as f:
+        json.dump({'mean_error': float(mean_error), 'std_error': float(std_error)}, f)
     
     # Save the model
-    savepath =  models_folder / model_folder / model_name
-    torch.save(model, savepath)
+    model_path = model_folder_path / 'model.pth'
+    torch.save(model, model_path)
 
     logger.end_timer()
     logger.save_log()

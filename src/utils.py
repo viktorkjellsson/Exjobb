@@ -107,6 +107,11 @@ def calculate_anomalous_regions(original, reconstructed, threshold, mode, k=1, n
         anomalous_indices = np.where(anomalous_points)[0]
         # Group consecutive anomalous points into regions
         regions = []
+
+        if len(anomalous_indices) == 0:
+            print("No anomalies detected.")
+            return [], threshold, error, rolling_mean_error
+        
         start_idx = anomalous_indices[0]  # Start with the first anomalous point
         
         for i in range(1, len(anomalous_indices)):
