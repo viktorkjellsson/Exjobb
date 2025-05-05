@@ -1,0 +1,46 @@
+{
+    "parameters": {
+        "input_dim": 20,
+        "output_dim": 20,
+        "hidden_dim": 32,
+        "num_layers": 1,
+        "learning_rate": 0.01,
+        "num_epochs": 5,
+        "dropout": 0.4,
+        "input_features": [
+            "Strain",
+            "Temperature",
+            "Rolling_mean",
+            "Rolling_std"
+        ],
+        "output_features": [
+            "Strain",
+            "Temperature"
+        ]
+    },
+    "start_time": "2025-04-28 11:24",
+    "end_time": "2025-04-28 11:26",
+    "training_duration": "0h 2m 3.22s",
+    "epoch_losses": [
+        {
+            "epoch": 1,
+            "loss": 0.005854220225546431
+        },
+        {
+            "epoch": 2,
+            "loss": 0.0022608399524046254
+        },
+        {
+            "epoch": 3,
+            "loss": 0.002097562266705496
+        },
+        {
+            "epoch": 4,
+            "loss": 0.002043745571293951
+        },
+        {
+            "epoch": 5,
+            "loss": 0.002023752962432503
+        }
+    ]
+}

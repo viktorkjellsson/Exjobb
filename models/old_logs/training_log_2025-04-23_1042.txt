@@ -1,0 +1,35 @@
+{
+    "parameters": {
+        "input_dim": 10,
+        "hidden_dim": 32,
+        "num_layers": 1,
+        "learning_rate": 0.01,
+        "num_epochs": 5,
+        "dropout": 0.0
+    },
+    "start_time": "2025-04-23 10:42",
+    "end_time": "2025-04-23 10:42",
+    "training_duration": "0h 0m 13.61s",
+    "epoch_losses": [
+        {
+            "epoch": 1,
+            "loss": 0.020280735107900745
+        },
+        {
+            "epoch": 2,
+            "loss": 0.004608410761945627
+        },
+        {
+            "epoch": 3,
+            "loss": 0.0024244885327238024
+        },
+        {
+            "epoch": 4,
+            "loss": 0.001816577855920927
+        },
+        {
+            "epoch": 5,
+            "loss": 0.0016187132904164944
+        }
+    ]
+}
