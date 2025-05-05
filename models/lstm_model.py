@@ -1,3 +1,51 @@
+"""
+LSTM Training Script for Multivariate Time Series Prediction.
+
+This module defines a PyTorch-based LSTM model and a training loop tailored for
+multivariate time series prediction tasks.
+It includes training utilities like device management, logging, and threshold estimation
+for downstream use.
+
+Classes:
+--------
+- LSTMModel: LSTM-based regressor with dropout and linear output.
+
+Functions:
+----------
+- training_loop(...): Trains the LSTM model using a specified DataLoader, logs performance metrics,
+  saves the model and error thresholds.
+
+Dependencies:
+-------------
+- torch: For model definition and training.
+- tqdm: For progress bars during training.
+- numpy: For statistical computations.
+- json: For saving training thresholds.
+- pathlib.Path: For path operations.
+- TrainingLogger: Custom logger for saving model parameters and training time.
+
+Usage:
+------
+This script is typically used within a larger ML pipeline. To train a model, instantiate
+`LSTMModel`, prepare a DataLoader, and call `training_loop(...)` with appropriate arguments.
+
+Example:
+
+model = LSTMModel(input_dim=10, output_dim=2, hidden_dim=128, num_layers=2, dropout=0.3)
+losses, preds = training_loop(
+    model=model,
+    train_loader=dataloader,
+    num_epochs=10,
+    learning_rate=0.001,
+    models_folder='outputs/models/',
+    model_subname='strain_predictor',
+    input_features=['strain', 'temperature',
+    output_features=['strain,
+    input_feature_names=['strain1', 'temperature1 ..., 'strain10', 'temperature10'],
+    output_feature_names=['strain9', 'strain10']
+)
+"""
+
 import torch
 from torch import nn, optim
 from tqdm import tqdm 
@@ -14,6 +62,7 @@ from src.train_logger import TrainingLogger
 
 
 class LSTMModel(nn.Module):
+    # def __init__(self, input_dim, output_dim, hidden_dim, num_layers, dropout):
     def __init__(self, input_dim, output_dim, hidden_dim, num_layers, dropout):    
         super(LSTMModel, self).__init__()
 

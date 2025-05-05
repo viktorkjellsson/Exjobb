@@ -1,3 +1,10 @@
+"""
+This script contains the configuration for the paths and directories used in the project.
+It includes the model parameters, input and output features, and the directories for data, models, and logs.
+
+Usage in other scripts: from configs.path_config import * 
+"""
+
 from pathlib import Path
 
 
@@ -7,12 +14,12 @@ from pathlib import Path
 
 # # Model features
 
-# INPUT_FEATURES = ['Strain', 
-#                 'Temperature',
-#                 'Rolling_mean', 
-#                 'Rolling_std']
 INPUT_FEATURES = ['Strain', 
-                'Temperature']
+                'Temperature',
+                'Rolling_mean', 
+                'Rolling_std']
+# INPUT_FEATURES = ['Strain', 
+#                 'Temperature']
 
 OUTPUT_FEATURES = ['Strain']
 
@@ -23,8 +30,43 @@ PARAMS = {
         'hidden_dim' : 128,
         'num_layers' : 2,
         'num_epochs' : 5,
-        'learning_rate' : 0.01,
-        'dropout' : 0.3}
+        'learning_rate' : 0.001,
+        'dropout' : 0.3,
+        'sequence_length' : 128,
+        'batch_size' : 64,
+        'test_size' : 0.3
+        }
+
+# =============================
+# Directories and Paths
+# =============================
+
+# Define base project directory using Path
+BASE_DIR = Path(__file__).resolve().parent.parent
+print(BASE_DIR)
+
+# Data directories
+RAW_DATA_DIR = BASE_DIR / 'data' / 'raw'                # Path to raw data
+PROCESSED_DATA_DIR = BASE_DIR / 'data' / 'processed'    # Path to processed data
+EXTRACTED_DATA_DIR = BASE_DIR / 'data' / 'extracted'    # Path to processed data
+OUTPUT_DIR = BASE_DIR / 'output'                        # Path to output (e.g., model, results)
+
+# Source directories
+UTILS_DIR = BASE_DIR / 'src' / 'utils'
+DATA_EXTRACT_DIR = BASE_DIR / 'src' / 'data_extract'
+PROCESSING_DIR = BASE_DIR / 'src' / 'processing'
+
+# Output directories
+OUTPUT_DIR = BASE_DIR / 'output'
+TXT_OUTPUT_DIR = OUTPUT_DIR / 'txt'
+
+# Configuration directories
+CONFIG_DIR = BASE_DIR / 'configs'
+
+# Model directories
+MODEL_DIR = BASE_DIR / 'models'
+LOGS_DIR = MODEL_DIR / 'logs'
+WEIGHTS_DIR = MODEL_DIR / 'weights'
 
 # =============================
 # Loop configurations
@@ -85,33 +127,3 @@ COMBINED = ['N-B-Close_Comp.txt_IX, B, 0.04.csv',
         'S-E_Mid_Comp.txt_S12,E,0.09_20090605000000-20210611160000.csv',
         'S-E_Tunnel_Comp.txt_S19,E,0.06_20090605000000-20210611160000.csv',
         'S-F_Close_Comp.txt_II,F,0.06_20090605000000-20210611160000.csv']
-
-# =============================
-# Directories and Paths
-# =============================
-
-# Define base project directory using Path
-BASE_DIR = Path(__file__).resolve().parent.parent
-print(BASE_DIR)
-
-# Data directories
-RAW_DATA_DIR = BASE_DIR / 'data' / 'raw'                # Path to raw data
-PROCESSED_DATA_DIR = BASE_DIR / 'data' / 'processed'    # Path to processed data
-EXTRACTED_DATA_DIR = BASE_DIR / 'data' / 'extracted'    # Path to processed data
-OUTPUT_DIR = BASE_DIR / 'output'                        # Path to output (e.g., model, results)
-
-# Source directories
-UTILS_DIR = BASE_DIR / 'src' / 'utils'
-DATA_EXTRACT_DIR = BASE_DIR / 'src' / 'data_extract'
-PROCESSING_DIR = BASE_DIR / 'src' / 'processing'
-
-# Output directories
-TXT_OUTPUT_DIR = BASE_DIR / 'output' / 'txt'
-
-# Configuration directories
-CONFIG_DIR = BASE_DIR / 'configs'
-
-# Model directories
-MODEL_DIR = BASE_DIR / 'models'
-LOGS_DIR = MODEL_DIR / 'logs'
-WEIGHTS_DIR = MODEL_DIR / 'weights'

@@ -14,7 +14,7 @@ from src.processing import preprocessing
 
 
 class StrainDataset(Dataset):
-    def __init__(self, folder_path, INPUT_FEATURES, OUTPUT_FEATURES, sequence_length, start_idx, test_size):
+    def __init__(self, folder_path, INPUT_FEATURES, OUTPUT_FEATURES, sequence_length, batch_size, test_size, start_idx):
         print("Initializing StrainDataset...")
 
         self.file_names = []  # Store file names
@@ -27,7 +27,7 @@ class StrainDataset(Dataset):
         scalers = {feature: MinMaxScaler() for feature in INPUT_FEATURES}
 
         for file in folder_path.glob("*.csv"):
-            print(f"Processing file: {file}")
+            print(f"\nProcessing file: {file.stem}")
             self.file_names.append(file.stem)
             df = pd.read_csv(file)
 
@@ -119,8 +119,8 @@ class StrainDataset(Dataset):
         self.timestamps_test = test_timestamps[:len(test_sequences_np)]
 
         # DataLoaders
-        self.train_dataloader = DataLoader(self.train_data, batch_size=32, shuffle=True)
-        self.test_dataloader = DataLoader(self.test_data, batch_size=32, shuffle=False)
+        self.train_dataloader = DataLoader(self.train_data, batch_size, shuffle=True)
+        self.test_dataloader = DataLoader(self.test_data, batch_size, shuffle=False)
 
         # Overlap check via hashing
         train_hashes = [hash(tuple(seq.numpy().flatten())) for seq in self.train_data]
