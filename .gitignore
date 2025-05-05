@@ -6,4 +6,7 @@ configs/txt_configs/filelist.txt
 *.pth
 tests/dataset_test.ipynb
 output/logs
+output/figures
 models/logs/
+notebooks/outputs
+data/extracted/

@@ -6,7 +6,7 @@ class TrainingLogger:
     """
     Class that creates a logger for the training loop and that saves the parameters, duration and losses for each epoch. 
     """
-    def __init__(self, log_dir="logs"):
+    def __init__(self, log_dir):
         self.log_dir = Path(log_dir)
         self.log_dir.mkdir(parents=True, exist_ok=True)
 
@@ -42,10 +42,6 @@ class TrainingLogger:
         """Log loss per epoch."""
         self.logs["epoch_losses"].append({"epoch": epoch + 1, "loss": loss})
 
-    # def save_log(self):
-    #     """Save logs to a .txt file."""
-    #     with open(self.log_file, "w") as f:
-    #         json.dump(self.logs, f, indent=4)
     def save_log(self):
         """Save logs to a .txt file with JSON-like formatting."""
         with open(self.log_file, "w", encoding="utf-8") as f:
