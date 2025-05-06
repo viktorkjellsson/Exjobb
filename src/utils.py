@@ -135,6 +135,91 @@ def calculate_anomalous_regions(original, reconstructed, threshold, mode, k=1, n
     return anomalous_indices, threshold, error, rolling_mean_error
 
 
+# def plot_reconstruction(dataset, model, N, input_feature_names, output_feature_names, timestamps, threshold, mode):
+#     model.eval()
+#     device = next(model.parameters()).device
+
+#     # Prepare the data subset
+#     if isinstance(dataset, torch.Tensor):
+#         data_subset = dataset[:N]
+#     else:
+#         data_subset = torch.stack([dataset[i] for i in range(N)])
+#     data_subset = data_subset.to(device)
+
+#     with torch.no_grad():
+#         reconstructed = model(data_subset)
+
+#     # Move to CPU for plotting
+#     data_subset = data_subset.cpu().numpy()
+#     reconstructed = reconstructed.cpu().numpy()
+
+#     # Handle sequence data (take last time step)
+#     if len(data_subset.shape) == 3:
+#         data_subset = data_subset[:, -1, :]
+#     if len(reconstructed.shape) == 3:
+#         reconstructed = reconstructed[:, -1, :]
+
+#     output_indices = [input_feature_names.index(f) for f in output_feature_names]
+#     num_features = len(output_indices)
+
+#     # Plot each feature in separate figures
+#     for feature_idx in output_indices:
+#         feature_name = input_feature_names[feature_idx]
+
+#         # Anomaly calculation
+#         window_size = 18
+#         anomalous_indices, threshold, error, rolling_mean_error = calculate_anomalous_regions(
+#             data_subset[:, feature_idx], reconstructed[:, feature_idx], threshold, mode=mode
+#         )
+#         df_anomalies = sort_anomalies(anomalous_indices, timestamps)
+
+#         # Create a new figure for each feature
+#         fig = go.Figure()
+
+#         # Plot true data
+#         fig.add_trace(go.Scatter(x=timestamps, y=data_subset[:, feature_idx],
+#                                  mode='lines', name='True'))
+
+#         # Plot reconstructed data
+#         fig.add_trace(go.Scatter(x=timestamps, y=reconstructed[:, feature_idx],
+#                                  mode='lines', name='Reconstructed'))
+
+#         # Plot anomaly score
+#         fig.add_trace(go.Scatter(x=timestamps, y=error,
+#                                  mode='lines', name='Anomaly Score'))
+
+#         # Plot rolling mean error
+#         fig.add_trace(go.Scatter(x=timestamps[window_size - 1:], y=rolling_mean_error,
+#                                  mode='lines', name='Rolling Mean Error',
+#                                  line=dict(color='green')))
+
+#         # Plot threshold line
+#         fig.add_trace(go.Scatter(x=[timestamps[0], timestamps[-1]], y=[threshold, threshold],
+#                                  mode='lines', name='Threshold',
+#                                  line=dict(color='red', dash='dash')))
+
+#         # Plot anomalous region shading
+#         if np.array(anomalous_indices).any():
+#             anomaly_mask = np.zeros(len(timestamps), dtype=bool)
+#             anomaly_mask[anomalous_indices] = True
+#             anomaly_fill = np.where(anomaly_mask, 1, np.nan)
+
+#             fig.add_trace(go.Scatter(x=timestamps, y=anomaly_fill,
+#                                      mode='lines', name='Anomalous Region',
+#                                      fill='tozeroy', fillcolor='rgba(255,0,0,0.2)',
+#                                      line=dict(color='rgba(255,0,0,0.0)')))
+
+#         # Update layout and show the plot
+#         fig.update_layout(title=f"True vs Reconstructed for {feature_name} with Anomaly Detection",
+#                           xaxis_title="Time",
+#                           yaxis_title="Value",
+#                           legend=dict(orientation='h', x=0, y=-0.1),
+#                           template="plotly_white")
+#         fig.update_xaxes(tickangle=45)
+#         fig.show()
+
+#     return reconstructed
+
 
 def plot_reconstruction(dataset, model, N, input_feature_names, output_feature_names, timestamps, threshold, mode, ncol=1):
     """

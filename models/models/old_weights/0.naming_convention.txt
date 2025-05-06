@@ -1,0 +1,11 @@
+How the models are named: 
+
+name_inputdim_hiddendim_hiddenlayers_epochs_learningrate
+
+e.g. lstm_model_7_64_2_5_0.001.pth
+	Name: lstm_model
+	Input dimension: 7 channels
+	Hidden dimension: 64
+	Hidden layers: 2 layers
+	Number of epochs in training: 5
+	Learning rate: 0.001

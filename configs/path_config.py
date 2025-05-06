@@ -1,41 +1,10 @@
 """
 This script contains the configuration for the paths and directories used in the project.
-It includes the model parameters, input and output features, and the directories for data, models, and logs.
 
 Usage in other scripts: from configs.path_config import * 
 """
 
 from pathlib import Path
-
-
-# =============================
-# Model configurations
-# =============================
-
-# # Model features
-
-INPUT_FEATURES = ['Strain', 
-                'Temperature',
-                'Rolling_mean', 
-                'Rolling_std']
-# INPUT_FEATURES = ['Strain', 
-#                 'Temperature']
-
-OUTPUT_FEATURES = ['Strain']
-
-
-# Model parameters
-
-PARAMS = {
-        'hidden_dim' : 128,
-        'num_layers' : 2,
-        'num_epochs' : 5,
-        'learning_rate' : 0.001,
-        'dropout' : 0.3,
-        'sequence_length' : 128,
-        'batch_size' : 64,
-        'test_size' : 0.3
-        }
 
 # =============================
 # Directories and Paths
@@ -64,7 +33,7 @@ TXT_OUTPUT_DIR = OUTPUT_DIR / 'txt'
 CONFIG_DIR = BASE_DIR / 'configs'
 
 # Model directories
-MODEL_DIR = BASE_DIR / 'models'
+MODEL_DIR = BASE_DIR / 'models' / 'models'
 LOGS_DIR = MODEL_DIR / 'logs'
 WEIGHTS_DIR = MODEL_DIR / 'weights'
 

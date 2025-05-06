@@ -1,5 +1,70 @@
+"""
+A PyTorch Dataset for loading, preprocessing, and batching time series strain sensor data from multiple CSV files.
+
+This dataset performs the following:
+- Loads CSV files from a given folder.
+- Splits each file into training and testing data chronologically.
+- Applies preprocessing and feature engineering on each split independently.
+- Normalizes features using MinMaxScaler (fit on training data only).
+- Concatenates features from all files (sensors) along the feature axis.
+- Constructs sliding sequences of a specified length for model input.
+- Returns sequences in PyTorch tensor format, ready for training.
+
+Parameters
+----------
+folder_path : Path
+    Path to the folder containing CSV files.
+
+INPUT_FEATURES : list of str
+    List of input feature names to extract and scale from each CSV file.
+
+OUTPUT_FEATURES : list of str
+    List of target feature names for potential downstream tasks.
+
+sequence_length : int
+    Length of each time series sequence (i.e., window size) for model input.
+
+batch_size : int
+    Number of sequences per batch in the PyTorch DataLoader.
+
+test_size : float
+    Proportion of each CSV file to allocate to the test set (e.g., 0.3 for 30%).
+
+start_idx : int
+    Number of initial rows to leave out from each CSV file if needed.
+
+Attributes
+----------
+train_data : torch.Tensor
+    Training data as a 3D tensor with shape [n_sequences, sequence_length, n_features].
+
+test_data : torch.Tensor
+    Testing data as a 3D tensor with shape [n_sequences, sequence_length, n_features].
+
+train_dataloader : DataLoader
+    PyTorch DataLoader for training sequences.
+
+test_dataloader : DataLoader
+    PyTorch DataLoader for testing sequences.
+
+input_feature_names : list of str
+    Input feature names prefixed by sensor (file) name, e.g., 'S-B_Close_Comp - Strain'.
+
+output_feature_names : list of str
+    Output feature names prefixed by sensor (file) name, e.g., 'S-B_Close_Comp - Temperature'.
+
+timestamps_train : list
+    List of datetime values for training samples (aligned with sequence start times).
+
+timestamps_test : list
+    List of datetime values for testing samples (aligned with sequence start times).
+
+Methods
+-------
+
+"""
+
 from pathlib import Path
-from dataclasses import dataclass
 import pandas as pd
 import numpy as np
 import sys
@@ -43,9 +108,11 @@ class StrainDataset(Dataset):
             # Save timestamps
             train_timestamps.extend(train_df["Time"].values)
             test_timestamps.extend(test_df["Time"].values)
+            self.timestamps_train = train_timestamps
+            self.timestamps_test = test_timestamps
 
-            train_df = preprocessing.preprocessing_pipeline(train_df, interpolate_threshold=50)
-            test_df = preprocessing.preprocessing_pipeline(test_df, interpolate_threshold=50)
+            train_df = preprocessing.preprocessing_pipeline(train_df, interpolate_threshold=20)
+            test_df = preprocessing.preprocessing_pipeline(test_df, interpolate_threshold=20)
 
             # Apply feature engineering independently
             train_df = preprocessing.add_features(train_df, column="Strain")
@@ -64,16 +131,13 @@ class StrainDataset(Dataset):
         self.test_df = test_df.copy()
         print(f"Train shape: {train_data.shape}, Test shape: {test_data.shape}")
 
-                # Feature name expansion
+        # Feature name expansion
         expanded_feature_names = []
         for sensor_name in self.file_names:
             for f in INPUT_FEATURES:
                 expanded_feature_names.append(f"{sensor_name} - {f}")
         self.feature_names = expanded_feature_names
         self.feature_count = train_data.shape[1]
-
-        # # Optional: keep a generic feature_names alias for backwards compatibility
-        # self.input_feature_names = self.input_feature_names
 
         # # Store input and output feature names with sensor prefixes
         self.input_feature_names = []
@@ -132,14 +196,14 @@ class StrainDataset(Dataset):
         else:
             print("No overlapping sequences detected. Train-test split is clean.")
 
-    def get_timestamps(self):
-        return self.timestamps_train, self.timestamps_test
+    # def get_timestamps(self):
+    #     return self.timestamps_train, self.timestamps_test
 
-    def __len__(self):
-        return len(self.train_data)
+    # def __len__(self):
+    #     return len(self.train_data)
 
-    def __getitem__(self, idx):
-        return self.train_data[idx]
+    # def __getitem__(self, idx):
+    #     return self.train_data[idx]
 
 
 
