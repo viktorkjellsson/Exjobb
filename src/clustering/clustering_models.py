@@ -156,8 +156,7 @@ def merge_clusters_by_divergence(dpgmm, labels, threshold):
     return merged_labels
 
 
-def streaming_dpgmm_clustering(normalized_pca_components, df, n_points, window_size, step_size, max_components, merge_threshold, merge_within_window):
-    prior = 1
+def streaming_dpgmm_clustering(normalized_pca_components, df, prior, n_points, window_size, step_size, max_components, merge_threshold, merge_within_window):
     all_labels = np.full(len(df), -1)
     all_probs = np.zeros(len(df))
     all_results = []
