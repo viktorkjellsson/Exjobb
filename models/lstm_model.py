@@ -113,7 +113,7 @@ def training_loop(
     model.to(device)
     print(f"Using device: {device}")
 
-    model_folder = f'lstm_model_{model_subname}_{model.input_dim}_{model.hidden_dim}_{model.num_layers}_{num_epochs}_{learning_rate}_{model.dropout_rate}'
+    model_folder = f'lstm_model_{model_subname}_{model.input_dim}_{model.hidden_dim}_{model.num_layers}_{learning_rate}_{model.dropout_rate}'
     model_folder_path = Path(models_folder) / model_folder
     model_folder_path.mkdir(parents=True, exist_ok=True)  # Ensure it exists
     # model_name = model_folder_path / model_subname / 'model.pth'  # Safe path concatenation
@@ -130,6 +130,8 @@ def training_loop(
         dropout=model.dropout.p,
         input_features=input_features,
         output_features=output_features,
+        input_feature_names=input_feature_names,
+        output_feature_names=output_feature_names,
     )
     logger.start_timer()
 

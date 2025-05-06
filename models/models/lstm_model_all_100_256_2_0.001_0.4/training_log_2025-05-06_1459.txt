@@ -1,0 +1,254 @@
+{
+    "parameters": {
+        "input_dim": 100,
+        "output_dim": 100,
+        "hidden_dim": 256,
+        "num_layers": 2,
+        "learning_rate": 0.001,
+        "num_epochs": 25,
+        "dropout": 0.4,
+        "input_features": [
+            "Strain",
+            "Temperature",
+            "Rolling_mean",
+            "Rolling_std"
+        ],
+        "output_features": [
+            "Strain"
+        ],
+        "input_feature_names": [
+            "S-B_Close_Comp.txt_I,B,1.75 - Strain",
+            "S-B_Close_Comp.txt_I,B,1.75 - Temperature",
+            "S-B_Close_Comp.txt_I,B,1.75 - Rolling_mean",
+            "S-B_Close_Comp.txt_I,B,1.75 - Rolling_std",
+            "S-B_Close_Comp.txt_II,B,0.06 - Strain",
+            "S-B_Close_Comp.txt_II,B,0.06 - Temperature",
+            "S-B_Close_Comp.txt_II,B,0.06 - Rolling_mean",
+            "S-B_Close_Comp.txt_II,B,0.06 - Rolling_std",
+            "S-B_Close_Comp.txt_III,B,0.06 - Strain",
+            "S-B_Close_Comp.txt_III,B,0.06 - Temperature",
+            "S-B_Close_Comp.txt_III,B,0.06 - Rolling_mean",
+            "S-B_Close_Comp.txt_III,B,0.06 - Rolling_std",
+            "S-B_Close_Comp.txt_IV,B,0.06 - Strain",
+            "S-B_Close_Comp.txt_IV,B,0.06 - Temperature",
+            "S-B_Close_Comp.txt_IV,B,0.06 - Rolling_mean",
+            "S-B_Close_Comp.txt_IV,B,0.06 - Rolling_std",
+            "S-B_Close_Comp.txt_IV,B,39.33 - Strain",
+            "S-B_Close_Comp.txt_IV,B,39.33 - Temperature",
+            "S-B_Close_Comp.txt_IV,B,39.33 - Rolling_mean",
+            "S-B_Close_Comp.txt_IV,B,39.33 - Rolling_std",
+            "S-C_Close_Comp.txt_I,C,0.55 - Strain",
+            "S-C_Close_Comp.txt_I,C,0.55 - Temperature",
+            "S-C_Close_Comp.txt_I,C,0.55 - Rolling_mean",
+            "S-C_Close_Comp.txt_I,C,0.55 - Rolling_std",
+            "S-C_Close_Comp.txt_II,C,0.06 - Strain",
+            "S-C_Close_Comp.txt_II,C,0.06 - Temperature",
+            "S-C_Close_Comp.txt_II,C,0.06 - Rolling_mean",
+            "S-C_Close_Comp.txt_II,C,0.06 - Rolling_std",
+            "S-C_Close_Comp.txt_III,C,0.07 - Strain",
+            "S-C_Close_Comp.txt_III,C,0.07 - Temperature",
+            "S-C_Close_Comp.txt_III,C,0.07 - Rolling_mean",
+            "S-C_Close_Comp.txt_III,C,0.07 - Rolling_std",
+            "S-C_Close_Comp.txt_IV,C,0.06 - Strain",
+            "S-C_Close_Comp.txt_IV,C,0.06 - Temperature",
+            "S-C_Close_Comp.txt_IV,C,0.06 - Rolling_mean",
+            "S-C_Close_Comp.txt_IV,C,0.06 - Rolling_std",
+            "S-C_Close_Comp.txt_IV,C,39.84 - Strain",
+            "S-C_Close_Comp.txt_IV,C,39.84 - Temperature",
+            "S-C_Close_Comp.txt_IV,C,39.84 - Rolling_mean",
+            "S-C_Close_Comp.txt_IV,C,39.84 - Rolling_std",
+            "S-D_Close_Comp.txt_I,D,1.15 - Strain",
+            "S-D_Close_Comp.txt_I,D,1.15 - Temperature",
+            "S-D_Close_Comp.txt_I,D,1.15 - Rolling_mean",
+            "S-D_Close_Comp.txt_I,D,1.15 - Rolling_std",
+            "S-D_Close_Comp.txt_II,D,0.06 - Strain",
+            "S-D_Close_Comp.txt_II,D,0.06 - Temperature",
+            "S-D_Close_Comp.txt_II,D,0.06 - Rolling_mean",
+            "S-D_Close_Comp.txt_II,D,0.06 - Rolling_std",
+            "S-D_Close_Comp.txt_III,D,0.05 - Strain",
+            "S-D_Close_Comp.txt_III,D,0.05 - Temperature",
+            "S-D_Close_Comp.txt_III,D,0.05 - Rolling_mean",
+            "S-D_Close_Comp.txt_III,D,0.05 - Rolling_std",
+            "S-D_Close_Comp.txt_IV,D,0.06 - Strain",
+            "S-D_Close_Comp.txt_IV,D,0.06 - Temperature",
+            "S-D_Close_Comp.txt_IV,D,0.06 - Rolling_mean",
+            "S-D_Close_Comp.txt_IV,D,0.06 - Rolling_std",
+            "S-D_Close_Comp.txt_IV,D,39.43 - Strain",
+            "S-D_Close_Comp.txt_IV,D,39.43 - Temperature",
+            "S-D_Close_Comp.txt_IV,D,39.43 - Rolling_mean",
+            "S-D_Close_Comp.txt_IV,D,39.43 - Rolling_std",
+            "S-E_Close_Comp.txt_I,E,0.04 - Strain",
+            "S-E_Close_Comp.txt_I,E,0.04 - Temperature",
+            "S-E_Close_Comp.txt_I,E,0.04 - Rolling_mean",
+            "S-E_Close_Comp.txt_I,E,0.04 - Rolling_std",
+            "S-E_Close_Comp.txt_II,E,0.06 - Strain",
+            "S-E_Close_Comp.txt_II,E,0.06 - Temperature",
+            "S-E_Close_Comp.txt_II,E,0.06 - Rolling_mean",
+            "S-E_Close_Comp.txt_II,E,0.06 - Rolling_std",
+            "S-E_Close_Comp.txt_III,E,0.06 - Strain",
+            "S-E_Close_Comp.txt_III,E,0.06 - Temperature",
+            "S-E_Close_Comp.txt_III,E,0.06 - Rolling_mean",
+            "S-E_Close_Comp.txt_III,E,0.06 - Rolling_std",
+            "S-E_Close_Comp.txt_IV,E,0.06 - Strain",
+            "S-E_Close_Comp.txt_IV,E,0.06 - Temperature",
+            "S-E_Close_Comp.txt_IV,E,0.06 - Rolling_mean",
+            "S-E_Close_Comp.txt_IV,E,0.06 - Rolling_std",
+            "S-E_Close_Comp.txt_IV,E,37.7 - Strain",
+            "S-E_Close_Comp.txt_IV,E,37.7 - Temperature",
+            "S-E_Close_Comp.txt_IV,E,37.7 - Rolling_mean",
+            "S-E_Close_Comp.txt_IV,E,37.7 - Rolling_std",
+            "S-F_Close_Comp.txt_I,F,1.6 - Strain",
+            "S-F_Close_Comp.txt_I,F,1.6 - Temperature",
+            "S-F_Close_Comp.txt_I,F,1.6 - Rolling_mean",
+            "S-F_Close_Comp.txt_I,F,1.6 - Rolling_std",
+            "S-F_Close_Comp.txt_II,F,0.06 - Strain",
+            "S-F_Close_Comp.txt_II,F,0.06 - Temperature",
+            "S-F_Close_Comp.txt_II,F,0.06 - Rolling_mean",
+            "S-F_Close_Comp.txt_II,F,0.06 - Rolling_std",
+            "S-F_Close_Comp.txt_III,F,0.06 - Strain",
+            "S-F_Close_Comp.txt_III,F,0.06 - Temperature",
+            "S-F_Close_Comp.txt_III,F,0.06 - Rolling_mean",
+            "S-F_Close_Comp.txt_III,F,0.06 - Rolling_std",
+            "S-F_Close_Comp.txt_IV,F,0.06 - Strain",
+            "S-F_Close_Comp.txt_IV,F,0.06 - Temperature",
+            "S-F_Close_Comp.txt_IV,F,0.06 - Rolling_mean",
+            "S-F_Close_Comp.txt_IV,F,0.06 - Rolling_std",
+            "S-F_Close_Comp.txt_IV,F,38.51 - Strain",
+            "S-F_Close_Comp.txt_IV,F,38.51 - Temperature",
+            "S-F_Close_Comp.txt_IV,F,38.51 - Rolling_mean",
+            "S-F_Close_Comp.txt_IV,F,38.51 - Rolling_std"
+        ],
+        "output_feature_names": [
+            "S-B_Close_Comp.txt_I,B,1.75 - Strain",
+            "S-B_Close_Comp.txt_II,B,0.06 - Strain",
+            "S-B_Close_Comp.txt_III,B,0.06 - Strain",
+            "S-B_Close_Comp.txt_IV,B,0.06 - Strain",
+            "S-B_Close_Comp.txt_IV,B,39.33 - Strain",
+            "S-C_Close_Comp.txt_I,C,0.55 - Strain",
+            "S-C_Close_Comp.txt_II,C,0.06 - Strain",
+            "S-C_Close_Comp.txt_III,C,0.07 - Strain",
+            "S-C_Close_Comp.txt_IV,C,0.06 - Strain",
+            "S-C_Close_Comp.txt_IV,C,39.84 - Strain",
+            "S-D_Close_Comp.txt_I,D,1.15 - Strain",
+            "S-D_Close_Comp.txt_II,D,0.06 - Strain",
+            "S-D_Close_Comp.txt_III,D,0.05 - Strain",
+            "S-D_Close_Comp.txt_IV,D,0.06 - Strain",
+            "S-D_Close_Comp.txt_IV,D,39.43 - Strain",
+            "S-E_Close_Comp.txt_I,E,0.04 - Strain",
+            "S-E_Close_Comp.txt_II,E,0.06 - Strain",
+            "S-E_Close_Comp.txt_III,E,0.06 - Strain",
+            "S-E_Close_Comp.txt_IV,E,0.06 - Strain",
+            "S-E_Close_Comp.txt_IV,E,37.7 - Strain",
+            "S-F_Close_Comp.txt_I,F,1.6 - Strain",
+            "S-F_Close_Comp.txt_II,F,0.06 - Strain",
+            "S-F_Close_Comp.txt_III,F,0.06 - Strain",
+            "S-F_Close_Comp.txt_IV,F,0.06 - Strain",
+            "S-F_Close_Comp.txt_IV,F,38.51 - Strain"
+        ]
+    },
+    "start_time": "2025-05-06 14:59",
+    "end_time": "2025-05-06 15:15",
+    "training_duration": "0h 16m 18.45s",
+    "epoch_losses": [
+        {
+            "epoch": 1,
+            "loss": 0.011527550174328296
+        },
+        {
+            "epoch": 2,
+            "loss": 0.008373649080040986
+        },
+        {
+            "epoch": 3,
+            "loss": 0.0070163774819693705
+        },
+        {
+            "epoch": 4,
+            "loss": 0.006200352710995661
+        },
+        {
+            "epoch": 5,
+            "loss": 0.005612848305507847
+        },
+        {
+            "epoch": 6,
+            "loss": 0.0051592873842657904
+        },
+        {
+            "epoch": 7,
+            "loss": 0.0047858336729269405
+        },
+        {
+            "epoch": 8,
+            "loss": 0.004474203683152471
+        },
+        {
+            "epoch": 9,
+            "loss": 0.004206927587246693
+        },
+        {
+            "epoch": 10,
+            "loss": 0.003977060906872477
+        },
+        {
+            "epoch": 11,
+            "loss": 0.0037789428581597776
+        },
+        {
+            "epoch": 12,
+            "loss": 0.003608322950599688
+        },
+        {
+            "epoch": 13,
+            "loss": 0.003459714950221189
+        },
+        {
+            "epoch": 14,
+            "loss": 0.0033292748346224845
+        },
+        {
+            "epoch": 15,
+            "loss": 0.0032146452625511565
+        },
+        {
+            "epoch": 16,
+            "loss": 0.003111676831056526
+        },
+        {
+            "epoch": 17,
+            "loss": 0.003019706243232293
+        },
+        {
+            "epoch": 18,
+            "loss": 0.0029362103646477134
+        },
+        {
+            "epoch": 19,
+            "loss": 0.002860918064192534
+        },
+        {
+            "epoch": 20,
+            "loss": 0.002792340113133516
+        },
+        {
+            "epoch": 21,
+            "loss": 0.0027294877933831904
+        },
+        {
+            "epoch": 22,
+            "loss": 0.002671235731256235
+        },
+        {
+            "epoch": 23,
+            "loss": 0.0026173954181697057
+        },
+        {
+            "epoch": 24,
+            "loss": 0.0025675376263393115
+        },
+        {
+            "epoch": 25,
+            "loss": 0.002521327670538069
+        }
+    ]
+}
