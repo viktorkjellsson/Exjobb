@@ -23,7 +23,7 @@ def preprocessing_pipeline(df, interpolate_threshold):
     """
 
     # Remove zeros and outliers
-    df = remove_outliers.clean_zeros_outliers(df)
+    df = remove_outliers.clean_zeros_outliers(df, k=1.5, window=100, step=50)
 
     # Find consecutive NaN regions
     threshold = 1 # Choose the threshold(s) for consecutive NaNs

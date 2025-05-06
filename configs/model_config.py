@@ -1,0 +1,38 @@
+"""
+This script includes the model parameters, input and output features, and the directories for data, models, and logs.
+
+Usage in other scripts: from configs.model_config import * 
+"""
+
+from pathlib import Path
+
+
+# =============================
+# Model configurations
+# =============================
+
+# # Model features
+
+# INPUT_FEATURES = ['Strain', 
+#                 'Temperature',
+#                 'Rolling_mean', 
+                # 'Rolling_std']
+# INPUT_FEATURES = ['Strain', 
+#                 'Temperature']
+INPUT_FEATURES = ['Strain']
+
+OUTPUT_FEATURES = ['Strain']
+
+
+# Model parameters
+
+PARAMS = {
+        'hidden_dim' : 32,
+        'num_layers' : 1,
+        'num_epochs' : 5,
+        'learning_rate' : 0.001,
+        'dropout' : 0.4,
+        'sequence_length' : 16,
+        'batch_size' : 64,
+        'test_size' : 0.5
+        }
