@@ -1,0 +1,13 @@
+How the models are named: 
+
+lstm_model_name_inputdim_hiddendim_hiddenlayers_learningrate_dropout
+
+e.g. lstm_model_loopB_20_128_2_10_0.001_0.4
+	Name: lstm_model_loopB
+	Input dimension: 20 channels
+	Hidden dimension: 128
+	Hidden layers: 2 layers
+	Learning rate: 0.001
+	Dropout: 0.4
+
+The rest of the model parameters as well as training performance can be found in the log.json files. 

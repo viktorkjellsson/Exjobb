@@ -1,0 +1,94 @@
+{
+    "parameters": {
+        "input_dim": 20,
+        "output_dim": 20,
+        "hidden_dim": 128,
+        "num_layers": 2,
+        "learning_rate": 0.001,
+        "num_epochs": 10,
+        "dropout": 0.4,
+        "input_features": [
+            "Strain",
+            "Temperature",
+            "Rolling_mean",
+            "Rolling_std"
+        ],
+        "output_features": [
+            "Strain"
+        ],
+        "input_feature_names": [
+            "S-D_Close_Comp.txt_I,D,1.15 - Strain",
+            "S-D_Close_Comp.txt_I,D,1.15 - Temperature",
+            "S-D_Close_Comp.txt_I,D,1.15 - Rolling_mean",
+            "S-D_Close_Comp.txt_I,D,1.15 - Rolling_std",
+            "S-D_Close_Comp.txt_II,D,0.06 - Strain",
+            "S-D_Close_Comp.txt_II,D,0.06 - Temperature",
+            "S-D_Close_Comp.txt_II,D,0.06 - Rolling_mean",
+            "S-D_Close_Comp.txt_II,D,0.06 - Rolling_std",
+            "S-D_Close_Comp.txt_III,D,0.05 - Strain",
+            "S-D_Close_Comp.txt_III,D,0.05 - Temperature",
+            "S-D_Close_Comp.txt_III,D,0.05 - Rolling_mean",
+            "S-D_Close_Comp.txt_III,D,0.05 - Rolling_std",
+            "S-D_Close_Comp.txt_IV,D,0.06 - Strain",
+            "S-D_Close_Comp.txt_IV,D,0.06 - Temperature",
+            "S-D_Close_Comp.txt_IV,D,0.06 - Rolling_mean",
+            "S-D_Close_Comp.txt_IV,D,0.06 - Rolling_std",
+            "S-D_Close_Comp.txt_IV,D,39.43 - Strain",
+            "S-D_Close_Comp.txt_IV,D,39.43 - Temperature",
+            "S-D_Close_Comp.txt_IV,D,39.43 - Rolling_mean",
+            "S-D_Close_Comp.txt_IV,D,39.43 - Rolling_std"
+        ],
+        "output_feature_names": [
+            "S-D_Close_Comp.txt_I,D,1.15 - Strain",
+            "S-D_Close_Comp.txt_II,D,0.06 - Strain",
+            "S-D_Close_Comp.txt_III,D,0.05 - Strain",
+            "S-D_Close_Comp.txt_IV,D,0.06 - Strain",
+            "S-D_Close_Comp.txt_IV,D,39.43 - Strain"
+        ]
+    },
+    "start_time": "2025-05-06 13:26",
+    "end_time": "2025-05-06 13:28",
+    "training_duration": "0h 2m 42.27s",
+    "epoch_losses": [
+        {
+            "epoch": 1,
+            "loss": 0.011846166700529664
+        },
+        {
+            "epoch": 2,
+            "loss": 0.008574226127896944
+        },
+        {
+            "epoch": 3,
+            "loss": 0.006974963244671623
+        },
+        {
+            "epoch": 4,
+            "loss": 0.005885423674430374
+        },
+        {
+            "epoch": 5,
+            "loss": 0.005116423441583048
+        },
+        {
+            "epoch": 6,
+            "loss": 0.004535978286749805
+        },
+        {
+            "epoch": 7,
+            "loss": 0.0040818379971383845
+        },
+        {
+            "epoch": 8,
+            "loss": 0.003716455264669924
+        },
+        {
+            "epoch": 9,
+            "loss": 0.0034187227094339
+        },
+        {
+            "epoch": 10,
+            "loss": 0.0031738160655064426
+        }
+    ]
+}

@@ -4,22 +4,19 @@ This script includes the model parameters, input and output features, and the di
 Usage in other scripts: from configs.model_config import * 
 """
 
-from pathlib import Path
-
-
 # =============================
 # Model configurations
 # =============================
 
 # # Model features
 
-# INPUT_FEATURES = ['Strain', 
-#                 'Temperature',
-#                 'Rolling_mean', 
-                # 'Rolling_std']
+INPUT_FEATURES = ['Strain', 
+                'Temperature',
+                'Rolling_mean', 
+                'Rolling_std']
 # INPUT_FEATURES = ['Strain', 
 #                 'Temperature']
-INPUT_FEATURES = ['Strain']
+# INPUT_FEATURES = ['Strain']
 
 OUTPUT_FEATURES = ['Strain']
 
@@ -27,12 +24,12 @@ OUTPUT_FEATURES = ['Strain']
 # Model parameters
 
 PARAMS = {
-        'hidden_dim' : 32,
-        'num_layers' : 1,
-        'num_epochs' : 5,
+        'hidden_dim' : 256,
+        'num_layers' : 2,
+        'num_epochs' : 25,
         'learning_rate' : 0.001,
         'dropout' : 0.4,
-        'sequence_length' : 16,
-        'batch_size' : 64,
-        'test_size' : 0.5
+        'sequence_length' : 64,
+        'batch_size' : 32,
+        'test_size' : 0.3
         }
