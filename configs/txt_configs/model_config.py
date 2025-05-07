@@ -24,12 +24,12 @@ OUTPUT_FEATURES = ['Strain']
 # Model parameters
 
 PARAMS = {
-        'hidden_dim' : 128,
+        'hidden_dim' : 512,
         'num_layers' : 2,
-        'num_epochs' : 15,
+        'num_epochs' : 25,
         'learning_rate' : 0.001,
         'dropout' : 0.4,
         'sequence_length' : 64,
         'batch_size' : 16,
-        'test_size' : 0.5
+        'test_size' : 0.3
         }
