@@ -75,48 +75,77 @@ def gmm_clustering(normalized_pca_components, df, n_clusters):
         data_with_gmm (pd DataFrame): The original DataFrame including the timestamps with the addition of the cluster labels.
     """
    
-    gmm = GaussianMixture(n_clusters, random_state=42)
+    gmm = GaussianMixture(n_components=n_clusters, random_state=42)
     clusters = gmm.fit_predict(normalized_pca_components)
 
     # Extract cluster probabilities
     probabilities = gmm.predict_proba(normalized_pca_components)
-
-    # Get the probability of the assigned cluster
     assigned_prob = probabilities[np.arange(len(clusters)), clusters]
 
-    # Add cluster labels to your original data (without overwriting)
-    data_with_gmm = df.copy()  # Make a copy to preserve the original DataFrame
-
-    # Insert the clusters as the second column (at index 1)
+    # Add to DataFrame
+    data_with_gmm = df.copy()
     data_with_gmm.insert(1, 'Cluster', clusters)
+    data_with_gmm.insert(2, 'Assigned_Cluster_Prob', assigned_prob)
 
-    data_with_gmm.insert(2, 'Assigned_Cluster_Prob', assigned_prob)  # Insert probability for the assigned cluster
+    # Prepare color map
+    used_clusters = np.unique(clusters)
+    palette = sns.color_palette('tab10', len(used_clusters))
+    cluster_color_map = {label: palette[i] for i, label in enumerate(used_clusters)}
+    cluster_color_map[-1] = (0.6, 0.6, 0.6)  # fallback for outliers if needed
 
-
-    # Count the number of data points assigned to each cluster
-    cluster_counts = {i: sum(clusters == i) for i in range(n_clusters)}
-
-    # Plot the clusters
+    # Plot
     plt.figure(figsize=(10, 6))
-    scatter = sns.scatterplot(x=normalized_pca_components[:, 0], y=normalized_pca_components[:, 1], hue=clusters, palette="viridis", s=100, alpha=0.7)
+    ax = sns.scatterplot(
+        x=normalized_pca_components[:, 0],
+        y=normalized_pca_components[:, 1],
+        hue=clusters,
+        palette=cluster_color_map,
+        s=60,
+        alpha=0.7,
+        legend='full'
+    )
 
-    # Create custom labels for the legend with the cluster counts
-    legend_labels = [f'Cluster {i} (n={cluster_counts[i]})' for i in range(n_clusters)]
-    handles, _ = scatter.get_legend_handles_labels()
+    plt.xlabel("PCA Component 1")
+    plt.ylabel("PCA Component 2")
+    plt.title("GMM Clustering on PCA Components")
 
-    # Set the custom labels in the legend
-    plt.legend(handles=handles, labels=legend_labels, title='Cluster')
+    handles, labels = ax.get_legend_handles_labels()
+    label_counts = pd.Series(clusters).value_counts().sort_index()
+    new_labels = [f"Cluster {int(lbl)} ({label_counts[int(lbl)]} samples)" if lbl.isdigit() else lbl for lbl in labels]
 
-    # Label the axes
-    plt.xlabel("Principal Component 1")
-    plt.ylabel("Principal Component 2")
-    plt.title("PCA + GMM Clustering")
-
-    # Show the plot
+    ax.legend(handles=handles, labels=new_labels, title='Cluster', loc='upper right')
     plt.show()
 
+    return data_with_gmm, cluster_color_map
+
+
+    # # Count the number of data points assigned to each cluster
+    # cluster_counts = {i: sum(clusters == i) for i in range(n_clusters)}
+
+    # # Plot the clusters
+    # plt.figure(figsize=(10, 6))
+    # scatter = sns.scatterplot(x=normalized_pca_components[:, 0], y=normalized_pca_components[:, 1], hue=clusters, palette="viridis", s=100, alpha=0.7)
+
+    # # Create custom labels for the legend with the cluster counts
+    # legend_labels = [f'Cluster {i} (n={cluster_counts[i]})' for i in range(n_clusters)]
+    # handles, _ = scatter.get_legend_handles_labels()
+
+    # # Set the custom labels in the legend
+    # plt.legend(handles=handles, labels=legend_labels, title='Cluster')
+
+    # # Label the axes
+    # plt.xlabel("Principal Component 1")
+    # plt.ylabel("Principal Component 2")
+    # plt.title("PCA + GMM Clustering")
+
+    # # Show the plot
+    # plt.show()
+
     # Show the updated DataFrame with the Cluster column as the second column
-    return data_with_gmm
+    # return data_with_gmm, cluster_color_map
+
+
+
 
 def kl_divergence(mu0, cov0, mu1, cov1):
     d = mu0.shape[0]
@@ -127,8 +156,10 @@ def kl_divergence(mu0, cov0, mu1, cov1):
     log_det_term = np.log(np.linalg.det(cov1) / np.linalg.det(cov0))
     return 0.5 * (trace_term + quad_term - d + log_det_term)
 
+
 def jeffreys_divergence(mu0, cov0, mu1, cov1):
     return 0.5 * (kl_divergence(mu0, cov0, mu1, cov1) + kl_divergence(mu1, cov1, mu0, cov0))
+
 
 def merge_clusters_by_divergence(dpgmm, labels, threshold):
     unique_labels = np.unique(labels)
@@ -156,8 +187,7 @@ def merge_clusters_by_divergence(dpgmm, labels, threshold):
     return merged_labels
 
 
-def streaming_dpgmm_clustering(normalized_pca_components, df, n_points, window_size, step_size, max_components, merge_threshold, merge_within_window):
-    prior = 1
+def streaming_dpgmm_clustering(normalized_pca_components, df, prior, n_points, window_size, step_size, max_components, merge_threshold, merge_within_window):
     all_labels = np.full(len(df), -1)
     all_probs = np.zeros(len(df))
     all_results = []
@@ -204,6 +234,7 @@ def streaming_dpgmm_clustering(normalized_pca_components, df, n_points, window_s
         dpgmm.fit(memory_data)
 
         labels = dpgmm.predict(window_data)
+        #Kolla om det har skapats nya kluster
         if merge_within_window:
             labels = merge_clusters_by_divergence(dpgmm, labels, merge_threshold)
 
@@ -214,6 +245,7 @@ def streaming_dpgmm_clustering(normalized_pca_components, df, n_points, window_s
         all_probs[start:end] = max_probs
 
         active_clusters = np.sum(dpgmm.weights_ > 0.01)
+        # active_clusters = dpgmm['Cluster'].unique().sum()
         print(f"Window {start}-{end} => Active clusters: {active_clusters}, Top 5 weights: {np.round(dpgmm.weights_[:5], 3)}")
 
         all_results.append({
@@ -262,33 +294,33 @@ def streaming_dpgmm_clustering(normalized_pca_components, df, n_points, window_s
     else:
         dpgmm_final = dpgmm  # fallback
 
-    # === Merge clusters outside the window loop === (if enabled)
-    if not merge_within_window:
-            # === Merge Clusters using Jeffrey's Divergence ===
-        unique_labels = np.unique(all_labels)
-        if -1 in unique_labels:
-            unique_labels = unique_labels[unique_labels != -1]
+    # # === Merge clusters outside the window loop === (if enabled)
+    # if not merge_within_window:
+    #         # === Merge Clusters using Jeffrey's Divergence ===
+    #     unique_labels = np.unique(all_labels)
+    #     if -1 in unique_labels:
+    #         unique_labels = unique_labels[unique_labels != -1]
 
-        if len(unique_labels) > 1:
-            means = dpgmm_final.means_
-            covariances = dpgmm_final.covariances_
-            label_indices = [label for label in unique_labels if np.sum(all_labels == label) > 0]
+    #     if len(unique_labels) > 1:
+    #         means = dpgmm_final.means_
+    #         covariances = dpgmm_final.covariances_
+    #         label_indices = [label for label in unique_labels if np.sum(all_labels == label) > 0]
 
-            distance_matrix = np.zeros((len(label_indices), len(label_indices)))
-            for i, idx_i in enumerate(label_indices):
-                for j, idx_j in enumerate(label_indices):
-                    if i < j:
-                        dist = jeffreys_divergence(means[idx_i], covariances[idx_i], means[idx_j], covariances[idx_j])
-                        distance_matrix[i, j] = distance_matrix[j, i] = dist
+    #         distance_matrix = np.zeros((len(label_indices), len(label_indices)))
+    #         for i, idx_i in enumerate(label_indices):
+    #             for j, idx_j in enumerate(label_indices):
+    #                 if i < j:
+    #                     dist = jeffreys_divergence(means[idx_i], covariances[idx_i], means[idx_j], covariances[idx_j])
+    #                     distance_matrix[i, j] = distance_matrix[j, i] = dist
 
-        sns.heatmap(distance_matrix, cmap='viridis')
-        plt.title("Jeffrey's Divergence Between Cluster Gaussians")
-        plt.show()
+    #     sns.heatmap(distance_matrix, cmap='viridis')
+    #     plt.title("Jeffrey's Divergence Between Cluster Gaussians")
+    #     plt.show()
 
-        Z = linkage(distance_matrix, method='average')
-        new_cluster_ids = fcluster(Z, t=merge_threshold, criterion='distance')
-        label_map = {old: new for old, new in zip(label_indices, new_cluster_ids)}
-        all_labels = np.array([label_map.get(label, -1) for label in all_labels])
+    #     Z = linkage(distance_matrix, method='average')
+    #     new_cluster_ids = fcluster(Z, t=merge_threshold, criterion='distance')
+    #     label_map = {old: new for old, new in zip(label_indices, new_cluster_ids)}
+    #     all_labels = np.array([label_map.get(label, -1) for label in all_labels])
 
 
     # === Return DataFrame with results ===
@@ -298,7 +330,7 @@ def streaming_dpgmm_clustering(normalized_pca_components, df, n_points, window_s
 
     used_clusters = np.unique(all_labels)
     used_clusters = used_clusters[used_clusters != -1]
-    palette = sns.color_palette('viridis', len(used_clusters))
+    palette = sns.color_palette('tab10', len(used_clusters))
     cluster_color_map = {label: palette[i] for i, label in enumerate(used_clusters)}
     cluster_color_map[-1] = (0.6, 0.6, 0.6)
 
@@ -333,4 +365,4 @@ def streaming_dpgmm_clustering(normalized_pca_components, df, n_points, window_s
     ax.legend(handles=handles, labels=new_labels, title='Cluster', loc='upper right')
     plt.show()
 
-    return df_result, all_results
+    return df_result, cluster_color_map
