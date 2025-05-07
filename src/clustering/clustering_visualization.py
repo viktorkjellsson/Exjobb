@@ -15,8 +15,7 @@ import plotly.graph_objects as go
 import matplotlib.cm as cm
 import matplotlib.colors as mcolors
 
-
-def plot_clusters_over_time(data_with_clusters, method) -> None:
+def plot_clusters_over_time(data_with_clusters, cluster_color_map, method) -> None:
     """
     Plot the assignment to clusters over time, only displaying active clusters.
     
@@ -27,24 +26,74 @@ def plot_clusters_over_time(data_with_clusters, method) -> None:
     # Convert timestamps
     data_with_clusters['Timestamp'] = pd.to_datetime(data_with_clusters['Timestamp'])
 
+    # Sort data by timestamp to ensure chronological order
+    data_with_clusters = data_with_clusters.sort_values(by='Timestamp')
+
     # Identify active clusters (those actually used)
     active_clusters = sorted(data_with_clusters['Cluster'].dropna().unique())
 
     # Create Plotly figure
     fig = go.Figure()
 
+    # Get unique timestamps
+    unique_timestamps = data_with_clusters['Timestamp'].unique()
+
+    # Initialize lists to store data for lines
+    line_x = []
+    line_y = []
+
+    # Add one trace per timestamp using specified colors
+    for timestamp in unique_timestamps:
+        timestamp_data = data_with_clusters[data_with_clusters['Timestamp'] == timestamp]
+        
+        for cluster in active_clusters:
+            cluster_data = timestamp_data[timestamp_data['Cluster'] == cluster]
+            if not cluster_data.empty:
+                color = cluster_color_map.get(cluster, 'gray')
+
+                # Convert RGB tuple (0-1) to hex if needed
+                if isinstance(color, tuple):
+                    color = f'rgba({int(color[0]*255)}, {int(color[1]*255)}, {int(color[2]*255)}, 1)'
+
+                fig.add_trace(go.Scatter(
+                    x=cluster_data['Timestamp'],
+                    y=[cluster] * len(cluster_data),
+                    mode='markers',
+                    marker=dict(size=6, color=color),
+                    opacity=1.0,
+                    showlegend=False  # Hide legend for individual markers
+                ))
+
+                # Append data for lines
+                line_x.extend(cluster_data['Timestamp'].tolist())
+                line_y.extend([cluster] * len(cluster_data))
+
+    # Add lines connecting consecutive markers (chronologically ordered)
     fig.add_trace(go.Scatter(
-        x=data_with_clusters['Timestamp'], 
-        y=data_with_clusters['Cluster'], 
-        mode='markers+lines',
-        marker=dict(
-            size=6, 
-            color=data_with_clusters['Cluster'], 
-            colorscale='Viridis',
-            colorbar=dict(title='Cluster')
-        ),
-        line=dict(width=0.5, color='gray')
+        x=line_x,
+        y=line_y,
+        mode='lines',
+        line=dict(color='black', width=0.5),
+        opacity=0.5,
+        showlegend=False,  # Hide legend for lines
     ))
+
+    # Add separate traces for legend entries
+    for cluster in active_clusters:
+        color = cluster_color_map.get(cluster, 'gray')
+
+        # Convert RGB tuple (0-1) to hex if needed
+        if isinstance(color, tuple):
+            color = f'rgba({int(color[0]*255)}, {int(color[1]*255)}, {int(color[2]*255)}, 1)'
+
+        fig.add_trace(go.Scatter(
+            x=[None],  # Dummy data for legend
+            y=[None],  # Dummy data for legend
+            mode='markers',
+            name=f'Cluster {cluster}',
+            marker=dict(size=6, color=color),
+            showlegend=True
+        ))
 
     # Update layout
     fig.update_layout(
@@ -56,12 +105,18 @@ def plot_clusters_over_time(data_with_clusters, method) -> None:
             tickmode='array',
             tickvals=active_clusters,
             ticktext=[str(c) for c in active_clusters]
-        )
+        ),
+        legend=dict(title='Cluster')
     )
 
     fig.show()
 
-def plot_cluster_mean_and_std(data_with_clusters, clusters_to_keep, method) -> None:
+
+
+
+
+
+def plot_cluster_mean_and_std(data_with_clusters, clusters_to_keep, cluster_color_map, method) -> None:
     """
     Plot the mean strain values for each cluster with uncertainty (standard deviation).
 
@@ -94,14 +149,17 @@ def plot_cluster_mean_and_std(data_with_clusters, clusters_to_keep, method) -> N
     average_std = df_std.mean(axis=1)
 
     # Setup Viridis colormap
-    cmap = cm.get_cmap('viridis')
+    cmap = cm.get_cmap("tab10")
     norm = mcolors.Normalize(vmin=min(all_clusters), vmax=max(all_clusters))  # Normalize using all clusters
 
     plt.figure(figsize=(30, 6))
 
     for cluster in df_mean.index:
         cluster_num = int(cluster)  # original numeric cluster label
-        color = cmap(norm(cluster_num))
+        color = cluster_color_map.get(cluster_num, (0.6, 0.6, 0.6))  # Fallback to gray
+
+        if isinstance(color, tuple):
+            color = (color[0], color[1], color[2])
 
         y_mean = df_mean.loc[cluster]
         y_std = df_std.loc[cluster]
