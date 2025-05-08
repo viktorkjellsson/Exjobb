@@ -20,6 +20,7 @@ def load_model_and_threshold(model_path):
 
 def plot_epochs_loss(num_epochs, losses):
 
+    plt.figure(figsize=(15, 9))
     plt.plot(range(1, num_epochs + 1), losses)
     plt.xlabel('Epochs')
     plt.xticks(range(1, num_epochs + 1))

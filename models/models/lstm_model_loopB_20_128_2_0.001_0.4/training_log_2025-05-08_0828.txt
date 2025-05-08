@@ -1,0 +1,174 @@
+{
+    "parameters": {
+        "input_dim": 20,
+        "output_dim": 20,
+        "hidden_dim": 128,
+        "num_layers": 2,
+        "learning_rate": 0.001,
+        "num_epochs": 30,
+        "dropout": 0.4,
+        "input_features": [
+            "Strain",
+            "Temperature",
+            "Rolling_mean",
+            "Rolling_std"
+        ],
+        "output_features": [
+            "Strain"
+        ],
+        "input_feature_names": [
+            "S-B_Close_Comp.txt_I,B,1.75 - Strain",
+            "S-B_Close_Comp.txt_I,B,1.75 - Temperature",
+            "S-B_Close_Comp.txt_I,B,1.75 - Rolling_mean",
+            "S-B_Close_Comp.txt_I,B,1.75 - Rolling_std",
+            "S-B_Close_Comp.txt_II,B,0.06 - Strain",
+            "S-B_Close_Comp.txt_II,B,0.06 - Temperature",
+            "S-B_Close_Comp.txt_II,B,0.06 - Rolling_mean",
+            "S-B_Close_Comp.txt_II,B,0.06 - Rolling_std",
+            "S-B_Close_Comp.txt_III,B,0.06 - Strain",
+            "S-B_Close_Comp.txt_III,B,0.06 - Temperature",
+            "S-B_Close_Comp.txt_III,B,0.06 - Rolling_mean",
+            "S-B_Close_Comp.txt_III,B,0.06 - Rolling_std",
+            "S-B_Close_Comp.txt_IV,B,0.06 - Strain",
+            "S-B_Close_Comp.txt_IV,B,0.06 - Temperature",
+            "S-B_Close_Comp.txt_IV,B,0.06 - Rolling_mean",
+            "S-B_Close_Comp.txt_IV,B,0.06 - Rolling_std",
+            "S-B_Close_Comp.txt_IV,B,39.33 - Strain",
+            "S-B_Close_Comp.txt_IV,B,39.33 - Temperature",
+            "S-B_Close_Comp.txt_IV,B,39.33 - Rolling_mean",
+            "S-B_Close_Comp.txt_IV,B,39.33 - Rolling_std"
+        ],
+        "output_feature_names": [
+            "S-B_Close_Comp.txt_I,B,1.75 - Strain",
+            "S-B_Close_Comp.txt_II,B,0.06 - Strain",
+            "S-B_Close_Comp.txt_III,B,0.06 - Strain",
+            "S-B_Close_Comp.txt_IV,B,0.06 - Strain",
+            "S-B_Close_Comp.txt_IV,B,39.33 - Strain"
+        ]
+    },
+    "start_time": "2025-05-08 08:28",
+    "end_time": "2025-05-08 08:34",
+    "training_duration": "0h 6m 33.42s",
+    "epoch_losses": [
+        {
+            "epoch": 1,
+            "loss": 0.013875895484759496
+        },
+        {
+            "epoch": 2,
+            "loss": 0.009824553258552375
+        },
+        {
+            "epoch": 3,
+            "loss": 0.00777549310178
+        },
+        {
+            "epoch": 4,
+            "loss": 0.006523656897816847
+        },
+        {
+            "epoch": 5,
+            "loss": 0.005625534850377135
+        },
+        {
+            "epoch": 6,
+            "loss": 0.004958047751267252
+        },
+        {
+            "epoch": 7,
+            "loss": 0.004444477313160831
+        },
+        {
+            "epoch": 8,
+            "loss": 0.004046803288470184
+        },
+        {
+            "epoch": 9,
+            "loss": 0.0037298337288059202
+        },
+        {
+            "epoch": 10,
+            "loss": 0.0034766686432277953
+        },
+        {
+            "epoch": 11,
+            "loss": 0.003267624882154271
+        },
+        {
+            "epoch": 12,
+            "loss": 0.003091203207257762
+        },
+        {
+            "epoch": 13,
+            "loss": 0.002939860575813752
+        },
+        {
+            "epoch": 14,
+            "loss": 0.002808153405595169
+        },
+        {
+            "epoch": 15,
+            "loss": 0.0026942891129436886
+        },
+        {
+            "epoch": 16,
+            "loss": 0.0025927346523298093
+        },
+        {
+            "epoch": 17,
+            "loss": 0.0025040706573469665
+        },
+        {
+            "epoch": 18,
+            "loss": 0.0024241365203563313
+        },
+        {
+            "epoch": 19,
+            "loss": 0.002352585977329158
+        },
+        {
+            "epoch": 20,
+            "loss": 0.002287373033434894
+        },
+        {
+            "epoch": 21,
+            "loss": 0.0022272621793838075
+        },
+        {
+            "epoch": 22,
+            "loss": 0.0021736799184666734
+        },
+        {
+            "epoch": 23,
+            "loss": 0.002124103072403944
+        },
+        {
+            "epoch": 24,
+            "loss": 0.002077551184665788
+        },
+        {
+            "epoch": 25,
+            "loss": 0.0020345596857092104
+        },
+        {
+            "epoch": 26,
+            "loss": 0.001995263470416489
+        },
+        {
+            "epoch": 27,
+            "loss": 0.001958659545847039
+        },
+        {
+            "epoch": 28,
+            "loss": 0.0019244302266702977
+        },
+        {
+            "epoch": 29,
+            "loss": 0.001892540385743027
+        },
+        {
+            "epoch": 30,
+            "loss": 0.0018626272332926974
+        }
+    ]
+}

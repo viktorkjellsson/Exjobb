@@ -26,7 +26,7 @@ OUTPUT_FEATURES = ['Strain']
 PARAMS = {
         'hidden_dim' : 128,
         'num_layers' : 2,
-        'num_epochs' : 15,
+        'num_epochs' : 30,
         'learning_rate' : 0.001,
         'dropout' : 0.4,
         'sequence_length' : 64,
