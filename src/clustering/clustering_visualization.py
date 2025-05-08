@@ -149,7 +149,7 @@ def plot_cluster_mean_and_std(data_with_clusters, clusters_to_keep, cluster_colo
     average_std = df_std.mean(axis=1)
 
     # Setup Viridis colormap
-    cmap = cm.get_cmap("tab10")
+    cmap = cm.get_cmap('tab10')
     norm = mcolors.Normalize(vmin=min(all_clusters), vmax=max(all_clusters))  # Normalize using all clusters
 
     plt.figure(figsize=(30, 6))

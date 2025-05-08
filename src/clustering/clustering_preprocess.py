@@ -13,8 +13,6 @@ from sklearn.mixture import GaussianMixture, BayesianGaussianMixture
 from sklearn.cluster import DBSCAN
 import plotly.graph_objects as go
 
-
-
 def load_data(path):
     """
     Description: Load data from a csv file containing strain distributions.
