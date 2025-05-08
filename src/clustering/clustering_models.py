@@ -14,6 +14,8 @@ from sklearn.cluster import DBSCAN
 import plotly.graph_objects as go
 from scipy.cluster.hierarchy import linkage, fcluster
 from scipy.spatial.distance import squareform
+from scipy.spatial.distance import mahalanobis
+from numpy.linalg import inv
 
 
 def kmeans_clustering(normalized_pca_components, df, n_clusters):
@@ -187,10 +189,40 @@ def merge_clusters_by_divergence(dpgmm, labels, threshold):
     return merged_labels
 
 
-def streaming_dpgmm_clustering(normalized_pca_components, df, prior, n_points, window_size, step_size, max_components, merge_threshold, merge_within_window):
+def assign_global_cluster_labels(means, covariances, global_stats, threshold, next_id):
+    label_map = {}
+    for i, (mean, cov) in enumerate(zip(means, covariances)):
+        min_dist = float('inf')
+        assigned_label = None
+        for (g_mean, g_cov, g_id) in global_stats:
+            try:
+                inv_cov = inv((cov + g_cov) / 2)
+                dist = mahalanobis(mean, g_mean, inv_cov)
+                if dist < min_dist:
+                    min_dist = dist
+                    assigned_label = g_id
+            except np.linalg.LinAlgError:
+                continue  # skip singular matrices
+
+        if min_dist < threshold:
+            label_map[i] = assigned_label
+        else:
+            label_map[i] = next_id
+            global_stats.append((mean, cov, next_id))
+            next_id += 1
+
+    return label_map, global_stats, next_id
+
+def streaming_dpgmm_clustering(normalized_pca_components, df, prior, n_points, window_size, step_size, max_components, merge_threshold):
     all_labels = np.full(len(df), -1)
     all_probs = np.zeros(len(df))
     all_results = []
+
+    global_cluster_stats = []
+    next_global_id = 0
+
+    def relabel(labels, map_dict):
+        return np.array([map_dict[label] for label in labels])
 
     # === Initial fit ===
     initial_data = normalized_pca_components[:n_points]
@@ -205,28 +237,32 @@ def streaming_dpgmm_clustering(normalized_pca_components, df, prior, n_points, w
         random_state=42
     )
     dpgmm_init.fit(initial_data)
-    initial_labels = dpgmm_init.predict(initial_data)
-    if merge_within_window:
-        initial_labels = merge_clusters_by_divergence(dpgmm_init, initial_labels, merge_threshold)
-    initial_probs = dpgmm_init.predict_proba(initial_data)
-    initial_max_probs = initial_probs[np.arange(len(initial_labels)), initial_labels]
-    all_labels[:n_points] = initial_labels
-    all_probs[:n_points] = initial_max_probs
+    init_labels = dpgmm_init.predict(initial_data)
 
-    print(f"Initial fit => Clusters used: {np.sum(dpgmm_init.weights_ > 0.01)}")
+    label_map, global_cluster_stats, next_global_id = assign_global_cluster_labels(
+        dpgmm_init.means_, dpgmm_init.covariances_, global_cluster_stats, merge_threshold, next_global_id
+    )
+    global_labels = relabel(init_labels, label_map)
+    init_probs = dpgmm_init.predict_proba(initial_data)
+    init_max_probs = init_probs[np.arange(len(init_labels)), init_labels]
+
+    all_labels[:n_points] = global_labels
+    all_probs[:n_points] = init_max_probs
+
+    print(f"Initial fit => Clusters used: {len(set(global_labels))}")
 
     # === Streaming windows ===
     for start in range(n_points, len(df) - window_size + 1, step_size):
         end = start + window_size
-        window_data = normalized_pca_components[start:end]
         memory_data = normalized_pca_components[:end]
+        window_data = normalized_pca_components[start:end]
 
         dpgmm = BayesianGaussianMixture(
             n_components=max_components,
             covariance_type='full',
             weight_concentration_prior_type='dirichlet_process',
             weight_concentration_prior=prior,
-            max_iter=1500,
+            max_iter=1000,
             tol=1e-3,
             init_params='kmeans',
             random_state=42
@@ -234,24 +270,24 @@ def streaming_dpgmm_clustering(normalized_pca_components, df, prior, n_points, w
         dpgmm.fit(memory_data)
 
         labels = dpgmm.predict(window_data)
-        #Kolla om det har skapats nya kluster
-        if merge_within_window:
-            labels = merge_clusters_by_divergence(dpgmm, labels, merge_threshold)
+        label_map, global_cluster_stats, next_global_id = assign_global_cluster_labels(
+            dpgmm.means_, dpgmm.covariances_, global_cluster_stats, merge_threshold, next_global_id
+        )
+        global_labels = relabel(labels, label_map)
 
         probs = dpgmm.predict_proba(window_data)
         max_probs = probs[np.arange(len(labels)), labels]
 
-        all_labels[start:end] = labels
+        all_labels[start:end] = global_labels
         all_probs[start:end] = max_probs
 
-        active_clusters = np.sum(dpgmm.weights_ > 0.01)
-        # active_clusters = dpgmm['Cluster'].unique().sum()
-        print(f"Window {start}-{end} => Active clusters: {active_clusters}, Top 5 weights: {np.round(dpgmm.weights_[:5], 3)}")
+        active_clusters = len(set(global_labels))
+        print(f"Window {start}-{end} => Active clusters in window: {active_clusters}, Top 5 weights: {np.round(dpgmm.weights_[:5], 3)}")
 
         all_results.append({
             'start': start,
             'end': end,
-            'labels': labels,
+            'labels': global_labels,
             'probs': max_probs
         })
 
@@ -274,54 +310,25 @@ def streaming_dpgmm_clustering(normalized_pca_components, df, prior, n_points, w
         dpgmm_final.fit(memory_data)
 
         final_labels = dpgmm_final.predict(final_data)
-        if merge_within_window:
-            final_labels = merge_clusters_by_divergence(dpgmm_final, final_labels, merge_threshold)
+        label_map, global_cluster_stats, next_global_id = assign_global_cluster_labels(
+            dpgmm_final.means_, dpgmm_final.covariances_, global_cluster_stats, merge_threshold, next_global_id
+        )
+        global_final_labels = relabel(final_labels, label_map)
 
         final_probs = dpgmm_final.predict_proba(final_data)
         final_max_probs = final_probs[np.arange(len(final_labels)), final_labels]
 
-        all_labels[final_start:] = final_labels
+        all_labels[final_start:] = global_final_labels
         all_probs[final_start:] = final_max_probs
 
-        print(f"Final window {final_start}-{len(df)} => Active clusters: {np.sum(dpgmm_final.weights_ > 0.01)}")
+        print(f"Final window {final_start}-{len(df)} => Active global clusters: {len(set(global_final_labels))}")
 
         all_results.append({
             'start': final_start,
             'end': len(df),
-            'labels': final_labels,
+            'labels': global_final_labels,
             'probs': final_max_probs
         })
-    else:
-        dpgmm_final = dpgmm  # fallback
-
-    # # === Merge clusters outside the window loop === (if enabled)
-    # if not merge_within_window:
-    #         # === Merge Clusters using Jeffrey's Divergence ===
-    #     unique_labels = np.unique(all_labels)
-    #     if -1 in unique_labels:
-    #         unique_labels = unique_labels[unique_labels != -1]
-
-    #     if len(unique_labels) > 1:
-    #         means = dpgmm_final.means_
-    #         covariances = dpgmm_final.covariances_
-    #         label_indices = [label for label in unique_labels if np.sum(all_labels == label) > 0]
-
-    #         distance_matrix = np.zeros((len(label_indices), len(label_indices)))
-    #         for i, idx_i in enumerate(label_indices):
-    #             for j, idx_j in enumerate(label_indices):
-    #                 if i < j:
-    #                     dist = jeffreys_divergence(means[idx_i], covariances[idx_i], means[idx_j], covariances[idx_j])
-    #                     distance_matrix[i, j] = distance_matrix[j, i] = dist
-
-    #     sns.heatmap(distance_matrix, cmap='viridis')
-    #     plt.title("Jeffrey's Divergence Between Cluster Gaussians")
-    #     plt.show()
-
-    #     Z = linkage(distance_matrix, method='average')
-    #     new_cluster_ids = fcluster(Z, t=merge_threshold, criterion='distance')
-    #     label_map = {old: new for old, new in zip(label_indices, new_cluster_ids)}
-    #     all_labels = np.array([label_map.get(label, -1) for label in all_labels])
-
 
     # === Return DataFrame with results ===
     df_result = df.copy()
@@ -331,10 +338,9 @@ def streaming_dpgmm_clustering(normalized_pca_components, df, prior, n_points, w
     used_clusters = np.unique(all_labels)
     used_clusters = used_clusters[used_clusters != -1]
     palette = sns.color_palette('tab10', len(used_clusters))
-    cluster_color_map = {label: palette[i] for i, label in enumerate(used_clusters)}
+    cluster_color_map = {label: palette[i % len(palette)] for i, label in enumerate(used_clusters)}
     cluster_color_map[-1] = (0.6, 0.6, 0.6)
 
-    # === Plot clusters with counts in legend ===
     plt.figure(figsize=(10, 6))
     ax = sns.scatterplot(
         x=normalized_pca_components[:, 0],
@@ -348,7 +354,7 @@ def streaming_dpgmm_clustering(normalized_pca_components, df, prior, n_points, w
 
     plt.xlabel("PCA Component 1")
     plt.ylabel("PCA Component 2")
-    plt.title("Streaming PCA + DPGMM Clustering")
+    plt.title("Streaming PCA + DPGMM Clustering with Global Merging")
 
     handles, labels = ax.get_legend_handles_labels()
     label_counts = pd.Series(all_labels).value_counts().sort_index()
@@ -366,3 +372,154 @@ def streaming_dpgmm_clustering(normalized_pca_components, df, prior, n_points, w
     plt.show()
 
     return df_result, cluster_color_map
+
+# def streaming_dpgmm_clustering(normalized_pca_components, df, prior, n_points, window_size, step_size, max_components, merge_threshold, merge_within_window):
+#     all_labels = np.full(len(df), -1)
+#     all_probs = np.zeros(len(df))
+#     all_results = []
+
+#     # === Initial fit ===
+#     initial_data = normalized_pca_components[:n_points]
+#     dpgmm_init = BayesianGaussianMixture(
+#         n_components=max_components,
+#         covariance_type='full',
+#         weight_concentration_prior_type='dirichlet_process',
+#         weight_concentration_prior=prior,
+#         max_iter=1000,
+#         tol=1e-3,
+#         init_params='kmeans',
+#         random_state=42
+#     )
+#     dpgmm_init.fit(initial_data)
+#     initial_labels = dpgmm_init.predict(initial_data)
+#     if merge_within_window:
+#         initial_labels = merge_clusters_by_divergence(dpgmm_init, initial_labels, merge_threshold)
+#     initial_probs = dpgmm_init.predict_proba(initial_data)
+#     initial_max_probs = initial_probs[np.arange(len(initial_labels)), initial_labels]
+#     all_labels[:n_points] = initial_labels
+#     all_probs[:n_points] = initial_max_probs
+
+#     print(f"Initial fit => Clusters used: {np.sum(dpgmm_init.weights_ > 0.01)}")
+
+#     # === Streaming windows ===
+#     for start in range(n_points, len(df) - window_size + 1, step_size):
+#         end = start + window_size
+#         window_data = normalized_pca_components[start:end]
+#         memory_data = normalized_pca_components[:end]
+
+#         dpgmm = BayesianGaussianMixture(
+#             n_components=max_components,
+#             covariance_type='full',
+#             weight_concentration_prior_type='dirichlet_process',
+#             weight_concentration_prior=prior,
+#             max_iter=1500,
+#             tol=1e-3,
+#             init_params='kmeans',
+#             random_state=42
+#         )
+#         dpgmm.fit(memory_data)
+
+#         labels = dpgmm.predict(window_data)
+#         #Kolla om det har skapats nya kluster
+#         if merge_within_window:
+#             labels = merge_clusters_by_divergence(dpgmm, labels, merge_threshold)
+
+#         probs = dpgmm.predict_proba(window_data)
+#         max_probs = probs[np.arange(len(labels)), labels]
+
+#         all_labels[start:end] = labels
+#         all_probs[start:end] = max_probs
+
+#         active_clusters = np.sum(dpgmm.weights_ > 0.01)
+#         # active_clusters = dpgmm['Cluster'].unique().sum()
+#         print(f"Window {start}-{end} => Active clusters: {active_clusters}, Top 5 weights: {np.round(dpgmm.weights_[:5], 3)}")
+
+#         all_results.append({
+#             'start': start,
+#             'end': end,
+#             'labels': labels,
+#             'probs': max_probs
+#         })
+
+#     # === Final window ===
+#     final_start = start + step_size
+#     if final_start < len(df):
+#         final_data = normalized_pca_components[final_start:]
+#         memory_data = normalized_pca_components[:]
+
+#         dpgmm_final = BayesianGaussianMixture(
+#             n_components=max_components,
+#             covariance_type='full',
+#             weight_concentration_prior_type='dirichlet_process',
+#             weight_concentration_prior=prior,
+#             max_iter=1000,
+#             tol=1e-3,
+#             init_params='kmeans',
+#             random_state=42
+#         )
+#         dpgmm_final.fit(memory_data)
+
+#         final_labels = dpgmm_final.predict(final_data)
+#         if merge_within_window:
+#             final_labels = merge_clusters_by_divergence(dpgmm_final, final_labels, merge_threshold)
+
+#         final_probs = dpgmm_final.predict_proba(final_data)
+#         final_max_probs = final_probs[np.arange(len(final_labels)), final_labels]
+
+#         all_labels[final_start:] = final_labels
+#         all_probs[final_start:] = final_max_probs
+
+#         print(f"Final window {final_start}-{len(df)} => Active clusters: {np.sum(dpgmm_final.weights_ > 0.01)}")
+
+#         all_results.append({
+#             'start': final_start,
+#             'end': len(df),
+#             'labels': final_labels,
+#             'probs': final_max_probs
+#         })
+#     else:
+#         dpgmm_final = dpgmm  # fallback
+
+#     # === Return DataFrame with results ===
+#     df_result = df.copy()
+#     df_result.insert(1, 'Cluster', all_labels)
+#     df_result.insert(2, 'Assigned_Cluster_Prob', all_probs)
+
+#     used_clusters = np.unique(all_labels)
+#     used_clusters = used_clusters[used_clusters != -1]
+#     palette = sns.color_palette('tab10', len(used_clusters))
+#     cluster_color_map = {label: palette[i] for i, label in enumerate(used_clusters)}
+#     cluster_color_map[-1] = (0.6, 0.6, 0.6)
+
+#     # === Plot clusters with counts in legend ===
+#     plt.figure(figsize=(10, 6))
+#     ax = sns.scatterplot(
+#         x=normalized_pca_components[:, 0],
+#         y=normalized_pca_components[:, 1],
+#         hue=all_labels,
+#         palette=cluster_color_map,
+#         s=60,
+#         alpha=0.7,
+#         legend='full'
+#     )
+
+#     plt.xlabel("PCA Component 1")
+#     plt.ylabel("PCA Component 2")
+#     plt.title("Streaming PCA + DPGMM Clustering")
+
+#     handles, labels = ax.get_legend_handles_labels()
+#     label_counts = pd.Series(all_labels).value_counts().sort_index()
+
+#     new_labels = []
+#     for lbl in labels:
+#         try:
+#             cluster_id = int(lbl)
+#             count = label_counts.get(cluster_id, 0)
+#             new_labels.append(f"Cluster {cluster_id} ({count} samples)")
+#         except ValueError:
+#             new_labels.append(lbl)
+
+#     ax.legend(handles=handles, labels=new_labels, title='Cluster', loc='upper right')
+#     plt.show()
+
+#     return df_result, cluster_color_map
