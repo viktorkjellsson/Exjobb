@@ -1,0 +1,214 @@
+{
+    "parameters": {
+        "input_dim": 20,
+        "output_dim": 20,
+        "hidden_dim": 128,
+        "num_layers": 2,
+        "learning_rate": 0.001,
+        "num_epochs": 40,
+        "dropout": 0.3,
+        "input_features": [
+            "Strain",
+            "Temperature",
+            "Rolling_mean",
+            "Rolling_std"
+        ],
+        "output_features": [
+            "Strain"
+        ],
+        "input_feature_names": [
+            "S-B_Close_Comp.txt_I,B,1.75 - Strain",
+            "S-B_Close_Comp.txt_I,B,1.75 - Temperature",
+            "S-B_Close_Comp.txt_I,B,1.75 - Rolling_mean",
+            "S-B_Close_Comp.txt_I,B,1.75 - Rolling_std",
+            "S-B_Close_Comp.txt_II,B,0.06 - Strain",
+            "S-B_Close_Comp.txt_II,B,0.06 - Temperature",
+            "S-B_Close_Comp.txt_II,B,0.06 - Rolling_mean",
+            "S-B_Close_Comp.txt_II,B,0.06 - Rolling_std",
+            "S-B_Close_Comp.txt_III,B,0.06 - Strain",
+            "S-B_Close_Comp.txt_III,B,0.06 - Temperature",
+            "S-B_Close_Comp.txt_III,B,0.06 - Rolling_mean",
+            "S-B_Close_Comp.txt_III,B,0.06 - Rolling_std",
+            "S-B_Close_Comp.txt_IV,B,0.06 - Strain",
+            "S-B_Close_Comp.txt_IV,B,0.06 - Temperature",
+            "S-B_Close_Comp.txt_IV,B,0.06 - Rolling_mean",
+            "S-B_Close_Comp.txt_IV,B,0.06 - Rolling_std",
+            "S-B_Close_Comp.txt_IV,B,39.33 - Strain",
+            "S-B_Close_Comp.txt_IV,B,39.33 - Temperature",
+            "S-B_Close_Comp.txt_IV,B,39.33 - Rolling_mean",
+            "S-B_Close_Comp.txt_IV,B,39.33 - Rolling_std"
+        ],
+        "output_feature_names": [
+            "S-B_Close_Comp.txt_I,B,1.75 - Strain",
+            "S-B_Close_Comp.txt_II,B,0.06 - Strain",
+            "S-B_Close_Comp.txt_III,B,0.06 - Strain",
+            "S-B_Close_Comp.txt_IV,B,0.06 - Strain",
+            "S-B_Close_Comp.txt_IV,B,39.33 - Strain"
+        ]
+    },
+    "start_time": "2025-05-09 10:01",
+    "end_time": "2025-05-09 10:13",
+    "training_duration": "0h 11m 58.75s",
+    "epoch_losses": [
+        {
+            "epoch": 1,
+            "loss": 0.011150395431521735
+        },
+        {
+            "epoch": 2,
+            "loss": 0.007468782543245896
+        },
+        {
+            "epoch": 3,
+            "loss": 0.005796354269096344
+        },
+        {
+            "epoch": 4,
+            "loss": 0.004795541836095409
+        },
+        {
+            "epoch": 5,
+            "loss": 0.004117198542304189
+        },
+        {
+            "epoch": 6,
+            "loss": 0.0036174679890843353
+        },
+        {
+            "epoch": 7,
+            "loss": 0.0032346798279977774
+        },
+        {
+            "epoch": 8,
+            "loss": 0.00292982715832406
+        },
+        {
+            "epoch": 9,
+            "loss": 0.0026842604885056053
+        },
+        {
+            "epoch": 10,
+            "loss": 0.0024850909136077417
+        },
+        {
+            "epoch": 11,
+            "loss": 0.002319198240250599
+        },
+        {
+            "epoch": 12,
+            "loss": 0.0021799657941774355
+        },
+        {
+            "epoch": 13,
+            "loss": 0.002061724234510798
+        },
+        {
+            "epoch": 14,
+            "loss": 0.001959224992207033
+        },
+        {
+            "epoch": 15,
+            "loss": 0.0018689729683979024
+        },
+        {
+            "epoch": 16,
+            "loss": 0.0017904617627087513
+        },
+        {
+            "epoch": 17,
+            "loss": 0.001721905309127898
+        },
+        {
+            "epoch": 18,
+            "loss": 0.001659174987918693
+        },
+        {
+            "epoch": 19,
+            "loss": 0.0016021586109260947
+        },
+        {
+            "epoch": 20,
+            "loss": 0.0015513326413756437
+        },
+        {
+            "epoch": 21,
+            "loss": 0.0015055159637006811
+        },
+        {
+            "epoch": 22,
+            "loss": 0.0014627823344598278
+        },
+        {
+            "epoch": 23,
+            "loss": 0.001423788123684795
+        },
+        {
+            "epoch": 24,
+            "loss": 0.0013880777698398938
+        },
+        {
+            "epoch": 25,
+            "loss": 0.0013547918262927674
+        },
+        {
+            "epoch": 26,
+            "loss": 0.001324315969535265
+        },
+        {
+            "epoch": 27,
+            "loss": 0.0012959069733758297
+        },
+        {
+            "epoch": 28,
+            "loss": 0.001269724734791497
+        },
+        {
+            "epoch": 29,
+            "loss": 0.0012448429358157887
+        },
+        {
+            "epoch": 30,
+            "loss": 0.0012215299046833454
+        },
+        {
+            "epoch": 31,
+            "loss": 0.0011996299431742837
+        },
+        {
+            "epoch": 32,
+            "loss": 0.0011786357119803609
+        },
+        {
+            "epoch": 33,
+            "loss": 0.0011593162677250395
+        },
+        {
+            "epoch": 34,
+            "loss": 0.001140899867269416
+        },
+        {
+            "epoch": 35,
+            "loss": 0.0011233651303127804
+        },
+        {
+            "epoch": 36,
+            "loss": 0.0011068507568152471
+        },
+        {
+            "epoch": 37,
+            "loss": 0.0010910513025891321
+        },
+        {
+            "epoch": 38,
+            "loss": 0.001076059511619866
+        },
+        {
+            "epoch": 39,
+            "loss": 0.0010621961957777086
+        },
+        {
+            "epoch": 40,
+            "loss": 0.0010485270178800996
+        }
+    ]
+}

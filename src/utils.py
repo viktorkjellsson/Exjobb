@@ -5,6 +5,9 @@ import numpy as np
 import matplotlib.dates as mdates
 import pandas as pd
 import json
+from itertools import groupby
+from operator import itemgetter
+from plotly.subplots import make_subplots
 
 def load_model_and_threshold(model_path):
     model = torch.load(model_path / 'model.pth')
@@ -135,8 +138,8 @@ def calculate_anomalous_regions(original, reconstructed, threshold, mode, k=1, n
 
     return anomalous_indices, threshold, error, rolling_mean_error
 
-
-# def plot_reconstruction(dataset, model, N, input_feature_names, output_feature_names, timestamps, threshold, mode):
+#### WITH SUBPLOTS ####
+# def plot_reconstruction(dataset, model, N, input_feature_names, output_feature_names, timestamps, threshold, save_dir, mode):
 #     model.eval()
 #     device = next(model.parameters()).device
 
@@ -163,8 +166,12 @@ def calculate_anomalous_regions(original, reconstructed, threshold, mode, k=1, n
 #     output_indices = [input_feature_names.index(f) for f in output_feature_names]
 #     num_features = len(output_indices)
 
-#     # Plot each feature in separate figures
-#     for feature_idx in output_indices:
+#     # Create subplots for each feature
+#     subplot_titles = [f"{input_feature_names[feature_idx]}" for feature_idx in output_indices]
+#     fig = make_subplots(rows=num_features, cols=1, shared_xaxes=True, vertical_spacing=0.1, subplot_titles=subplot_titles)
+
+#     # Loop over features to add traces
+#     for i, feature_idx in enumerate(output_indices):
 #         feature_name = input_feature_names[feature_idx]
 
 #         # Anomaly calculation
@@ -174,164 +181,300 @@ def calculate_anomalous_regions(original, reconstructed, threshold, mode, k=1, n
 #         )
 #         df_anomalies = sort_anomalies(anomalous_indices, timestamps)
 
-#         # Create a new figure for each feature
-#         fig = go.Figure()
-
-#         # Plot true data
+#         # Plot true data (only show legend for the first feature)
 #         fig.add_trace(go.Scatter(x=timestamps, y=data_subset[:, feature_idx],
-#                                  mode='lines', name='True'))
+#                                 mode='lines', name='True', line=dict(color='#1f77b4', width=1),
+#                                 showlegend=False if i > 0 else True),
+#                       row=i+1, col=1)
 
-#         # Plot reconstructed data
+#         # Plot reconstructed data (only show legend for the first feature)
 #         fig.add_trace(go.Scatter(x=timestamps, y=reconstructed[:, feature_idx],
-#                                  mode='lines', name='Reconstructed'))
+#                                 mode='lines', name='Reconstructed', line=dict(color='#ff7f0e', width=1),
+#                                 showlegend=False if i > 0 else True),
+#                       row=i+1, col=1)
 
-#         # Plot anomaly score
+#         # Plot anomaly score (only show legend for the first feature)
 #         fig.add_trace(go.Scatter(x=timestamps, y=error,
-#                                  mode='lines', name='Anomaly Score'))
+#                                 mode='lines', name='Anomaly Score', line=dict(color='#98df8a'),
+#                                 showlegend=False if i > 0 else True),
+#                       row=i+1, col=1)
 
-#         # Plot rolling mean error
+#         # Plot rolling mean error (only show legend for the first feature)
 #         fig.add_trace(go.Scatter(x=timestamps[window_size - 1:], y=rolling_mean_error,
-#                                  mode='lines', name='Rolling Mean Error',
-#                                  line=dict(color='green')))
+#                                 mode='lines', name='Rolling Mean Error',
+#                                 line=dict(color='#2ca02c'), showlegend=False if i > 0 else True),
+#                       row=i+1, col=1)
 
-#         # Plot threshold line
+#         # Plot threshold line (only show legend for the first feature)
 #         fig.add_trace(go.Scatter(x=[timestamps[0], timestamps[-1]], y=[threshold, threshold],
-#                                  mode='lines', name='Threshold',
-#                                  line=dict(color='red', dash='dash')))
+#                                 mode='lines', name=f'Threshold',
+#                                 line=dict(color='#d62728', dash='dash'),
+#                                 showlegend=False if i > 0 else True),
+#                       row=i+1, col=1)
 
-#         # Plot anomalous region shading
-#         if np.array(anomalous_indices).any():
-#             anomaly_mask = np.zeros(len(timestamps), dtype=bool)
-#             anomaly_mask[anomalous_indices] = True
-#             anomaly_fill = np.where(anomaly_mask, 1, np.nan)
+#         if anomalous_indices:
+#             for k, g in groupby(enumerate(sorted(anomalous_indices)), lambda ix: ix[0] - ix[1]):
+#                 group = list(map(itemgetter(1), g))
+#                 start_idx, end_idx = group[0], group[-1]
 
-#             fig.add_trace(go.Scatter(x=timestamps, y=anomaly_fill,
-#                                      mode='lines', name='Anomalous Region',
-#                                      fill='tozeroy', fillcolor='rgba(255,0,0,0.2)',
-#                                      line=dict(color='rgba(255,0,0,0.0)')))
+#                 fig.add_trace(go.Scatter(
+#                     x=timestamps[start_idx:end_idx+1],
+#                     y=data_subset[start_idx:end_idx+1, feature_idx],
+#                     mode='lines',
+#                     name='Anomalous Region',
+#                     fill='tozeroy',
+#                     fillcolor='rgba(255, 152, 150, 0.6)',  # 20% opacity
+#                     line=dict(color='rgba(255, 152, 150, 0.0)'),  # Invisible line
+#                     showlegend=False
+#                 ), row=i+1, col=1)
 
-#         # Update layout and show the plot
-#         fig.update_layout(title=f"True vs Reconstructed for {feature_name} with Anomaly Detection",
-#                           xaxis_title="Time",
-#                           yaxis_title="Value",
-#                           legend=dict(orientation='h', x=0, y=-0.1),
-#                           template="plotly_white")
-#         fig.update_xaxes(tickangle=45)
-#         fig.show()
+#         # Add y-axis title for each subplot
+#         fig.update_yaxes(title_text='Strain (normalized)', row=i+1, col=1)
+#         if i == num_features - 1:  # Add x-axis title only for the last subplot
+#             fig.update_xaxes(title_text="Time", row=i+1, col=1)
+#         else:
+#             fig.update_xaxes(title_text="", row=i+1, col=1)  # Remove title for others
+
+#     # Update layout for all subplots (common settings)
+#     fig.update_layout(
+#         xaxis_title="Time",
+#         legend=dict(
+#             orientation='h',
+#             x=1,  # Right-align the legend
+#             y=1,  # Position it at the top
+#             xanchor='right',  # Anchor to the right
+#             yanchor='top'  # Anchor to the top
+#         ),
+#         template="plotly_white",
+#         margin=dict(r=100, t=100),  # Adjust margins to prevent clipping
+#         height=400 * num_features  # Adjust the height based on the number of subplots
+#     )
+
+#     # Set x-axis ticks for all subplots
+#     fig.update_xaxes(
+#         tickangle=45,
+#         dtick="M1",  # One tick per month
+#         tickformat="%b %Y",  # e.g., Jan 2025
+#         ticklabelmode="period",  # Align labels to whole months
+#         showticklabels=True  # Show tick labels on all subplots
+#     )
+
+#     # Ensure the save directory exists
+#     save_dir.parent.mkdir(parents=True, exist_ok=True)
+
+#     # Define width and height to preserve aspect ratio
+#     width = 1600  # Customize as needed
+#     height = 400 * num_features  # Adjust based on the number of features/subplots
+
+#     # Save the plot as a PDF with the specified dimensions
+#     fig.write_image(str(save_dir), format='pdf', width=width, height=height, scale=1)
+
+#     # Show the plot
+#     fig.show()
 
 #     return reconstructed
 
+### WITHOUT SUBPLOTS ####
+def plot_reconstruction(dataset, model, N, input_feature_names, output_feature_names, timestamps, threshold, save_dir, mode):
+    model.eval()
+    device = next(model.parameters()).device
 
-def plot_reconstruction(dataset, model, N, input_feature_names, output_feature_names, timestamps, threshold, mode, ncol=1):
-    """
-    Plot true vs reconstructed values for every feature over N steps using subplots.
-
-    Parameters:
-    - dataset: Dataset or DataLoader containing the input data.
-    - model: Trained autoencoder model.
-    - N: Number of steps to plot.
-    - output_feature_names: List of feature names (optional).
-    - mode: Mode of anomaly detection (1 for absolute difference, 2 for consecutive anomalies).
-    - ncol: Number of columns in the subplot grid.
-    """
-    model.eval()  # Set model to evaluation mode
-    device = next(model.parameters()).device  # Get model's device
-
-    # Select first N samples
+    # Prepare the data subset
     if isinstance(dataset, torch.Tensor):
         data_subset = dataset[:N]
     else:
         data_subset = torch.stack([dataset[i] for i in range(N)])
-
     data_subset = data_subset.to(device)
 
     with torch.no_grad():
         reconstructed = model(data_subset)
 
-    # Convert to CPU
+    # Move to CPU for plotting
     data_subset = data_subset.cpu().numpy()
     reconstructed = reconstructed.cpu().numpy()
 
-    print(f"Shape of data_subset: {data_subset.shape}")
-    print(f"Shape of reconstructed: {reconstructed.shape}")
-
-    # Extract last timestep if sequences are present
-    if len(data_subset.shape) == 3:  # (N, seq_len, num_features)
-        data_subset = data_subset[:, -1, :]  # Extract last time step
-
-    if len(reconstructed.shape) == 3:  # Ensure reconstructed matches shape
+    # Handle sequence data (take last time step)
+    if len(data_subset.shape) == 3:
+        data_subset = data_subset[:, -1, :]
+    if len(reconstructed.shape) == 3:
         reconstructed = reconstructed[:, -1, :]
 
-    # # Ensure feature names are valid
-    # feature_names = feature_names or [f"Feature {i+1}" for i in range(num_features)]
-    # print("Features----------------------------------\n" + "\n".join(feature_names))
-
     output_indices = [input_feature_names.index(f) for f in output_feature_names]
-    print(f"Output indices: {output_indices}")
 
-    num_features = len(output_indices)
-    print(f"Number of features: {num_features}")
-    print(f"Output feature names: {output_feature_names}")
+    for feature_idx in output_indices:
+        feature_name = input_feature_names[feature_idx]
 
-    # Determine subplot grid
-    nrows = int(np.ceil(num_features / ncol))
-    fig, axes = plt.subplots(nrows=nrows, ncols=ncol, figsize=(20 * ncol, 4 * nrows))
-    # axes = axes.flatten()
-
-    if len(output_indices) == 1:
-        axes = [axes]  # Make it a list to handle it like a loop
-    plt_idx = 0
-    for i, ax in zip(output_indices, axes):
-        # if i < num_features:
-        feature_name = input_feature_names[i]
-        print(f"Feature Name: {feature_name}")
-        print(f"Feature Index: {i}")
-
-        # Calculate anomalies and threshold
+        # Anomaly detection
         window_size = 18
-        anomalous_indices, threshold, error, rolling_mean_error = calculate_anomalous_regions(data_subset[:, i], reconstructed[:, i], threshold, mode=mode)
-        df_anomalies = sort_anomalies(anomalous_indices, timestamps)
-        print(f'\n{feature_name} Anomalies:\n{df_anomalies}')
+        anomalous_indices, thres, error, rolling_mean_error = calculate_anomalous_regions(
+            data_subset[:, feature_idx], reconstructed[:, feature_idx], threshold, mode=mode
+        )
+
+        fig = go.Figure()
+
+        fig.add_trace(go.Scatter(x=timestamps, y=data_subset[:, feature_idx],
+                                 mode='lines', name='True', line=dict(color='#1f77b4', width=1)))
+        fig.add_trace(go.Scatter(x=timestamps, y=reconstructed[:, feature_idx],
+                                 mode='lines', name='Reconstructed', line=dict(color='#ff7f0e', width=1)))
+        fig.add_trace(go.Scatter(x=timestamps, y=error,
+                                 mode='lines', name='Anomaly Score', line=dict(color='#98df8a')))
+        fig.add_trace(go.Scatter(x=timestamps[window_size - 1:], y=rolling_mean_error,
+                                 mode='lines', name='Rolling Mean Error', line=dict(color='#2ca02c')))
+        fig.add_trace(go.Scatter(x=[timestamps[0], timestamps[-1]], y=[thres, thres],
+                                 mode='lines', name='Threshold', line=dict(color='#d62728', dash='dash')))
+
+        if anomalous_indices:
+            for k, g in groupby(enumerate(sorted(anomalous_indices)), lambda ix: ix[0] - ix[1]):
+                group = list(map(itemgetter(1), g))
+                start_idx, end_idx = group[0], group[-1]
+                fig.add_trace(go.Scatter(
+                    x=timestamps[start_idx:end_idx + 1],
+                    y=data_subset[start_idx:end_idx + 1, feature_idx],
+                    mode='lines',
+                    name='Anomalous Region',
+                    fill='tozeroy',
+                    fillcolor='rgba(255, 152, 150, 0.6)',
+                    line=dict(color='rgba(255, 152, 150, 0.0)'),
+                    showlegend=False
+                ))
+
+        fig.update_layout(
+            title=f"Reconstruction - {feature_name}",
+            xaxis_title="Time",
+            yaxis_title="Strain (normalized)",
+            legend=dict(orientation='h', x=1, y=1, xanchor='right', yanchor='top'),
+            template="plotly_white",
+            margin=dict(r=100, t=100),
+            width=1600,
+            height=500
+        )
+
+        fig.update_xaxes(
+            tickangle=45,
+            dtick="M1",
+            tickformat="%b %Y",
+            ticklabelmode="period"
+        )
+
+        # Save to separate file
+        file_path = save_dir.parent / f"{save_dir.stem}_{feature_name}{save_dir.suffix}"
+        fig.write_image(str(file_path), format='pdf', width=1600, height=500, scale=1)
+
+        fig.show()
+
+
+
+### WITH MATPLOTLIB ####
+# def plot_reconstruction(dataset, model, N, input_feature_names, output_feature_names, timestamps, threshold, mode, ncol=1):
+#     """
+#     Plot true vs reconstructed values for every feature over N steps using subplots.
+
+#     Parameters:
+#     - dataset: Dataset or DataLoader containing the input data.
+#     - model: Trained autoencoder model.
+#     - N: Number of steps to plot.
+#     - output_feature_names: List of feature names (optional).
+#     - mode: Mode of anomaly detection (1 for absolute difference, 2 for consecutive anomalies).
+#     - ncol: Number of columns in the subplot grid.
+#     """
+#     model.eval()  # Set model to evaluation mode
+#     device = next(model.parameters()).device  # Get model's device
+
+#     # Select first N samples
+#     if isinstance(dataset, torch.Tensor):
+#         data_subset = dataset[:N]
+#     else:
+#         data_subset = torch.stack([dataset[i] for i in range(N)])
+
+#     data_subset = data_subset.to(device)
+
+#     with torch.no_grad():
+#         reconstructed = model(data_subset)
+
+#     # Convert to CPU
+#     data_subset = data_subset.cpu().numpy()
+#     reconstructed = reconstructed.cpu().numpy()
+
+#     print(f"Shape of data_subset: {data_subset.shape}")
+#     print(f"Shape of reconstructed: {reconstructed.shape}")
+
+#     # Extract last timestep if sequences are present
+#     if len(data_subset.shape) == 3:  # (N, seq_len, num_features)
+#         data_subset = data_subset[:, -1, :]  # Extract last time step
+
+#     if len(reconstructed.shape) == 3:  # Ensure reconstructed matches shape
+#         reconstructed = reconstructed[:, -1, :]
+
+#     # # Ensure feature names are valid
+#     # feature_names = feature_names or [f"Feature {i+1}" for i in range(num_features)]
+#     # print("Features----------------------------------\n" + "\n".join(feature_names))
+
+#     output_indices = [input_feature_names.index(f) for f in output_feature_names]
+#     print(f"Output indices: {output_indices}")
+
+#     num_features = len(output_indices)
+#     print(f"Number of features: {num_features}")
+#     print(f"Output feature names: {output_feature_names}")
+
+#     # Determine subplot grid
+#     nrows = int(np.ceil(num_features / ncol))
+#     fig, axes = plt.subplots(nrows=nrows, ncols=ncol, figsize=(20 * ncol, 4 * nrows))
+#     # axes = axes.flatten()
+
+#     if len(output_indices) == 1:
+#         axes = [axes]  # Make it a list to handle it like a loop
+#     plt_idx = 0
+#     for i, ax in zip(output_indices, axes):
+#         # if i < num_features:
+#         feature_name = input_feature_names[i]
+#         print(f"Feature Name: {feature_name}")
+#         print(f"Feature Index: {i}")
+
+#         # Calculate anomalies and threshold
+#         window_size = 18
+#         anomalous_indices, threshold, error, rolling_mean_error = calculate_anomalous_regions(data_subset[:, i], reconstructed[:, i], threshold, mode=mode)
+#         df_anomalies = sort_anomalies(anomalous_indices, timestamps)
+#         print(f'\n{feature_name} Anomalies:\n{df_anomalies}')
         
 
-        # Plot the true data, reconstructed data, and error
-        ax.plot(timestamps, data_subset[:, i], label="True", alpha=0.8)
-        ax.plot(timestamps, reconstructed[:, i], label="Reconstructed", alpha=0.8)
-        ax.plot(timestamps, error, label="Anomaly Score", alpha=0.8)
-        print(f'plt_idx: {plt_idx}, i: {i}')
-        plt_idx += 4
+#         # Plot the true data, reconstructed data, and error
+#         ax.plot(timestamps, data_subset[:, i], label="True", alpha=0.8)
+#         ax.plot(timestamps, reconstructed[:, i], label="Reconstructed", alpha=0.8)
+#         ax.plot(timestamps, error, label="Anomaly Score", alpha=0.8)
+#         print(f'plt_idx: {plt_idx}, i: {i}')
+#         plt_idx += 4
         
-        # Plot the rolling mean error with a distinct label
-        ax.plot(timestamps[window_size - 1:], rolling_mean_error, label="Rolling Mean Error", alpha=0.8, color='green')
+#         # Plot the rolling mean error with a distinct label
+#         ax.plot(timestamps[window_size - 1:], rolling_mean_error, label="Rolling Mean Error", alpha=0.8, color='green')
 
-        # Plot the threshold line
-        ax.axhline(y=threshold, color='red', linestyle='--', label='Threshold', alpha=0.6)
+#         # Plot the threshold line
+#         ax.axhline(y=threshold, color='red', linestyle='--', label='Threshold', alpha=0.6)
 
-        # Highlight anomalous regions
-        anomalous_region_mask = np.zeros_like(error, dtype=bool)
-        anomalous_region_mask[anomalous_indices] = True
-        ax.fill_between(timestamps, 0, 1, where=anomalous_region_mask, color='red', alpha=0.3, label='Anomalous Region')
+#         # Highlight anomalous regions
+#         anomalous_region_mask = np.zeros_like(error, dtype=bool)
+#         anomalous_region_mask[anomalous_indices] = True
+#         ax.fill_between(timestamps, 0, 1, where=anomalous_region_mask, color='red', alpha=0.3, label='Anomalous Region')
 
-        # Set plot titles, labels, and grid
-        ax.set_title(feature_name)
-        ax.set_xlabel("Time")
-        ax.set_ylabel("Value")
-        ax.legend()
-        ax.grid()
+#         # Set plot titles, labels, and grid
+#         ax.set_title(feature_name)
+#         ax.set_xlabel("Time")
+#         ax.set_ylabel("Value")
+#         ax.legend()
+#         ax.grid()
 
-        # Format the x-axis to show months
-        ax.xaxis.set_major_locator(mdates.MonthLocator())  # Group by month
-        ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))  # Format to 'Year-Month'
+#         # Format the x-axis to show months
+#         ax.xaxis.set_major_locator(mdates.MonthLocator())  # Group by month
+#         ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))  # Format to 'Year-Month'
 
-        # Adjust x-tick labels for better readability
-        ax.set_xticks(ax.get_xticks())  # Get current tick positions
-        ax.set_xticklabels([mdates.DateFormatter('%Y-%m').format_data(t) for t in ax.get_xticks()], rotation=45)
+#         # Adjust x-tick labels for better readability
+#         ax.set_xticks(ax.get_xticks())  # Get current tick positions
+#         ax.set_xticklabels([mdates.DateFormatter('%Y-%m').format_data(t) for t in ax.get_xticks()], rotation=45)
 
-    # Adjust layout and show the plot
-    plt.tight_layout()
-    plt.show()
+#     # Adjust layout and show the plot
+#     plt.tight_layout()
+#     plt.show()
 
-    return reconstructed
+#     return reconstructed
 
 
 def anomaly_score(test, reconstructed, timestamps, output_feature_names, N, ncol=2):
