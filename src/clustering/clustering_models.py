@@ -239,9 +239,7 @@ def streaming_dpgmm_clustering(normalized_pca_components, df, prior, n_points, w
     dpgmm_init.fit(initial_data)
     init_labels = dpgmm_init.predict(initial_data)
 
-    label_map, global_cluster_stats, next_global_id = assign_global_cluster_labels(
-        dpgmm_init.means_, dpgmm_init.covariances_, global_cluster_stats, merge_threshold, next_global_id
-    )
+    label_map, global_cluster_stats, next_global_id = assign_global_cluster_labels(dpgmm_init.means_, dpgmm_init.covariances_, global_cluster_stats, merge_threshold, next_global_id)
     global_labels = relabel(init_labels, label_map)
     init_probs = dpgmm_init.predict_proba(initial_data)
     init_max_probs = init_probs[np.arange(len(init_labels)), init_labels]

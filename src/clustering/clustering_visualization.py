@@ -14,6 +14,12 @@ from sklearn.cluster import DBSCAN
 import plotly.graph_objects as go
 import matplotlib.cm as cm
 import matplotlib.colors as mcolors
+import plotly.express as px
+
+# Add the root project directory to the Python path
+project_root = Path.cwd().parent  # This will get the project root since the notebook is in 'notebooks/'
+sys.path.append(str(project_root))
+from configs.path_config import OUTPUT_DIR
 
 def plot_clusters_over_time(data_with_clusters, cluster_color_map, method) -> None:
     """
@@ -109,6 +115,11 @@ def plot_clusters_over_time(data_with_clusters, cluster_color_map, method) -> No
         legend=dict(title='Cluster')
     )
 
+    save_dir = OUTPUT_DIR / 'strain_distributions' / 'DPGMM' / 'E - threshold=7' / "E_plot_over_time.pdf"
+
+    # file_path = save_dir.parent / f"{save_dir.stem}_{feature_name}{save_dir.suffix}"
+    fig.write_image(str(save_dir), format='pdf', width=1500, height=500, scale=1)
+ 
     fig.show()
 
 
@@ -178,6 +189,9 @@ def plot_cluster_mean_and_std(data_with_clusters, clusters_to_keep, cluster_colo
     plt.title(f'{method} Clustering Centroids with Uncertainty (Standard Deviation)')
     plt.legend(title='Cluster')
     plt.grid(True)
+
+    save_dir = OUTPUT_DIR / 'strain_distributions' / 'DPGMM' / 'E - threshold=7' / f'E_{clusters_to_keep}_mean_and_std.pdf'
+    plt.savefig(save_dir, format='pdf', bbox_inches='tight')
     plt.show()
 
 

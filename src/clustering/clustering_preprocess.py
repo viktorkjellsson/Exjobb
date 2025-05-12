@@ -1,16 +1,9 @@
 from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 import numpy as np
-from datetime import datetime
-import sys
 from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_score, davies_bouldin_score
-from sklearn.mixture import GaussianMixture, BayesianGaussianMixture
-from sklearn.cluster import DBSCAN
+from sklearn.preprocessing import StandardScaler
 import plotly.graph_objects as go
 
 def load_data(path):
