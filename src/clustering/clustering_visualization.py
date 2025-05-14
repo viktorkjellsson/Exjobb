@@ -1,27 +1,20 @@
 from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
-import numpy as np
-from datetime import datetime
 import sys
-from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_score, davies_bouldin_score
-from sklearn.mixture import GaussianMixture, BayesianGaussianMixture
-from sklearn.cluster import DBSCAN
 import plotly.graph_objects as go
 import matplotlib.cm as cm
 import matplotlib.colors as mcolors
-import plotly.express as px
+import seaborn as sns
+from plotly.subplots import make_subplots
+import numpy as np
 
 # Add the root project directory to the Python path
 project_root = Path.cwd().parent  # This will get the project root since the notebook is in 'notebooks/'
 sys.path.append(str(project_root))
 from configs.path_config import OUTPUT_DIR
 
-def plot_clusters_over_time(data_with_clusters, cluster_color_map, method) -> None:
+def plot_clusters_over_time(data_with_clusters, cluster_color_map, method, save_dir, save) -> None:
     """
     Plot the assignment to clusters over time, only displaying active clusters.
     
@@ -115,90 +108,330 @@ def plot_clusters_over_time(data_with_clusters, cluster_color_map, method) -> No
         legend=dict(title='Cluster')
     )
 
-    save_dir = OUTPUT_DIR / 'strain_distributions' / 'DPGMM' / 'E - threshold=7' / "E_plot_over_time.pdf"
-
-    # file_path = save_dir.parent / f"{save_dir.stem}_{feature_name}{save_dir.suffix}"
-    fig.write_image(str(save_dir), format='pdf', width=1500, height=500, scale=1)
+    if save == True:
+        fig.write_image(str(save_dir), format='pdf', width=1500, height=500, scale=1)
+        fig.show()
+    else:
+        fig.show()
  
-    fig.show()
+    
 
 
 
 
 
 
-def plot_cluster_mean_and_std(data_with_clusters, clusters_to_keep, cluster_color_map, method) -> None:
+# def plot_cluster_mean_and_std(data_with_clusters, clusters_to_keep, cluster_color_map, method, save_dir, save) -> None:
+#     """
+#     Plot the mean strain values for each cluster with uncertainty (standard deviation).
+
+#     Args:
+#         data_with_clusters (pd.DataFrame): DataFrame with 'Timestamp' and 'Cluster' columns,
+#                                            other columns should be numeric sensor data (e.g., distances).
+#         clusters_to_keep (list): List of cluster labels to keep (e.g., [0, 1, 2]) or ['all'] to keep all.
+#         method (str): Name of clustering method for plot title.
+#     """
+#     # Get unique clusters and normalize types
+#     cluster_col = data_with_clusters['Cluster'].dropna()
+#     all_clusters = sorted(cluster_col.unique())  # Use all unique cluster labels for consistent color mapping
+
+#     # Normalize user input
+#     if clusters_to_keep == ['all']:
+#         clusters_to_keep = [str(c) for c in all_clusters]
+
+#     else:
+#         clusters_to_keep = [str(c) for c in clusters_to_keep]
+
+#     # Drop timestamp for clustering-related stats
+#     df_mean = data_with_clusters.drop(columns='Timestamp').groupby('Cluster').mean()
+#     df_std = data_with_clusters.drop(columns='Timestamp').groupby('Cluster').std()
+
+#     # Filter to desired clusters
+#     df_mean = df_mean.loc[df_mean.index.astype(str).isin(clusters_to_keep)]
+#     df_std = df_std.loc[df_std.index.astype(str).isin(clusters_to_keep)]
+
+#     x_values = pd.to_numeric(df_mean.columns, errors='coerce')
+#     average_std = df_std.mean(axis=1)
+
+#     # Setup Viridis colormap
+#     cmap = cm.get_cmap('tab10')
+#     norm = mcolors.Normalize(vmin=min(all_clusters), vmax=max(all_clusters))  # Normalize using all clusters
+
+#     plt.figure(figsize=(30, 6))
+
+#     for cluster in df_mean.index:
+#         cluster_num = int(cluster)  # original numeric cluster label
+#         color = cluster_color_map.get(cluster_num, (0.6, 0.6, 0.6))  # Fallback to gray
+
+#         if isinstance(color, tuple):
+#             color = (color[0], color[1], color[2])
+
+#         y_mean = df_mean.loc[cluster]
+#         y_std = df_std.loc[cluster]
+
+#         plt.plot(x_values, y_mean,
+#                  label=f'Cluster {cluster} - Mean, Avg. std: {average_std[cluster]:.2f}',
+#                  linewidth=2, color=color)
+
+#         plt.fill_between(x_values,
+#                          y_mean - y_std,
+#                          y_mean + y_std,
+#                          alpha=0.2, color=color)
+
+#     plt.xlabel('Distance [m]')
+#     plt.ylabel('Strain (Mean Value)')
+#     plt.title(f'{method} Clustering Centroids with Uncertainty (Standard Deviation)')
+#     plt.legend(title='Cluster')
+#     plt.grid(True)
+
+#     if save == True:
+#         plt.savefig(save_dir, format='pdf', bbox_inches='tight')
+#         plt.show()
+#     else:
+#         plt.show()
+
+
+def plot_cluster_mean_and_std(data_with_clusters, clusters_to_keep, cluster_color_map, method, beam, save_dir=None, save=False):
     """
-    Plot the mean strain values for each cluster with uncertainty (standard deviation).
+    Plotly version of cluster mean + standard deviation bands.
 
     Args:
-        data_with_clusters (pd.DataFrame): DataFrame with 'Timestamp' and 'Cluster' columns,
-                                           other columns should be numeric sensor data (e.g., distances).
-        clusters_to_keep (list): List of cluster labels to keep (e.g., [0, 1, 2]) or ['all'] to keep all.
-        method (str): Name of clustering method for plot title.
+        data_with_clusters (pd.DataFrame): Must contain 'Timestamp', 'Cluster' + sensor columns (as distances).
+        clusters_to_keep (list): List of clusters to plot, or ['all'].
+        cluster_color_map (dict): Maps int cluster_id to RGB tuples.
+        method (str): Title method (e.g., 'DPGMM').
+        save_dir (str): Where to save (only if save=True).
+        save (bool): Whether to export as .pdf.
     """
-    # Get unique clusters and normalize types
+    # Normalize clusters
     cluster_col = data_with_clusters['Cluster'].dropna()
-    all_clusters = sorted(cluster_col.unique())  # Use all unique cluster labels for consistent color mapping
+    all_clusters = sorted(cluster_col.unique())
 
-    # Normalize user input
     if clusters_to_keep == ['all']:
         clusters_to_keep = [str(c) for c in all_clusters]
-
     else:
         clusters_to_keep = [str(c) for c in clusters_to_keep]
 
-    # Drop timestamp for clustering-related stats
+    # Compute stats
     df_mean = data_with_clusters.drop(columns='Timestamp').groupby('Cluster').mean()
     df_std = data_with_clusters.drop(columns='Timestamp').groupby('Cluster').std()
 
-    # Filter to desired clusters
     df_mean = df_mean.loc[df_mean.index.astype(str).isin(clusters_to_keep)]
     df_std = df_std.loc[df_std.index.astype(str).isin(clusters_to_keep)]
 
     x_values = pd.to_numeric(df_mean.columns, errors='coerce')
     average_std = df_std.mean(axis=1)
 
-    # Setup Viridis colormap
-    cmap = cm.get_cmap('tab10')
-    norm = mcolors.Normalize(vmin=min(all_clusters), vmax=max(all_clusters))  # Normalize using all clusters
-
-    plt.figure(figsize=(30, 6))
+    # Create Plotly figure
+    fig = go.Figure()
 
     for cluster in df_mean.index:
-        cluster_num = int(cluster)  # original numeric cluster label
-        color = cluster_color_map.get(cluster_num, (0.6, 0.6, 0.6))  # Fallback to gray
-
-        if isinstance(color, tuple):
-            color = (color[0], color[1], color[2])
+        cluster_num = int(cluster)
+        color_rgb = cluster_color_map.get(cluster_num, (0.6, 0.6, 0.6))
+        color_hex = f'rgb({int(color_rgb[0]*255)}, {int(color_rgb[1]*255)}, {int(color_rgb[2]*255)})'
 
         y_mean = df_mean.loc[cluster]
         y_std = df_std.loc[cluster]
 
-        plt.plot(x_values, y_mean,
-                 label=f'Cluster {cluster} - Mean, Avg. std: {average_std[cluster]:.2f}',
-                 linewidth=2, color=color)
+        # Std band (transparent fill)
+        fig.add_trace(go.Scatter(
+            x=x_values,
+            y=y_mean + y_std,
+            mode='lines',
+            line=dict(width=0),
+            showlegend=False,
+            hoverinfo='skip'
+        ))
 
-        plt.fill_between(x_values,
-                         y_mean - y_std,
-                         y_mean + y_std,
-                         alpha=0.2, color=color)
+        fig.add_trace(go.Scatter(
+            x=x_values,
+            y=y_mean - y_std,
+            mode='lines',
+            line=dict(width=0),
+            fill='tonexty',
+            fillcolor=color_hex.replace('rgb', 'rgba').replace(')', ',0.2)'),
+            name=f'Cluster {cluster} ± std',
+            hoverinfo='skip',
+            showlegend=False
+        ))
 
-    plt.xlabel('Distance [m]')
-    plt.ylabel('Strain (Mean Value)')
-    plt.title(f'{method} Clustering Centroids with Uncertainty (Standard Deviation)')
-    plt.legend(title='Cluster')
-    plt.grid(True)
+        # Mean line
+        fig.add_trace(go.Scatter(
+            x=x_values,
+            y=y_mean,
+            mode='lines',
+            line=dict(color=color_hex, width=2),
+            name=f'Cluster {cluster} - Mean (avg std: {average_std[cluster]:.2f})'
+        ))
 
-    save_dir = OUTPUT_DIR / 'strain_distributions' / 'DPGMM' / 'E - threshold=7' / f'E_{clusters_to_keep}_mean_and_std.pdf'
-    plt.savefig(save_dir, format='pdf', bbox_inches='tight')
-    plt.show()
+    support_coords = list(beam.values())
+    annotations = list(beam.keys())
+    # Add vertical lines at chosen x-values
+    for x_val, annotation in zip(support_coords, annotations):
+        fig.add_shape(
+            type="line",
+            x0=x_val, x1=x_val,
+            y0=min(df_mean.min()), y1=max(df_mean.max()),
+            line=dict(color="grey", width=1, dash="dash")
+        )
+        
+        fig.add_annotation(
+            x=x_val,
+            y=min(df_mean.min())*1.1,  # Slightly below plot
+            text=annotation,
+            showarrow=False,
+            font=dict(size=12, color="black"),
+            xanchor="center"
+        )
+
+    fig.update_layout(
+        title=f'{method} Clustering Centroids with Uncertainty (Standard Deviation)',
+        xaxis_title='Distance [m]',
+        yaxis_title='Strain (Mean Value)',
+        legend_title='Cluster',
+        height=500,
+        width=1500,
+        template='plotly_white'
+    )
+
+    if save:
+        fig.write_image(str(save_dir), format='pdf', width=1500, height=500, scale=1)
+    else:
+        fig.show()
 
 
+def plot_dpgmm_clusters(
+    df,
+    normalized_pca_components,
+    all_labels,
+    cluster_color_map, 
+    num_components_to_plot,
+    save_dir,
+    save
+):
+    # Add cluster labels to the DataFrame
+    df['Cluster'] = all_labels
+
+    num_components_total = normalized_pca_components.shape[1]
+
+    # Use only up to the specified number of PCA components
+    num_components = min(num_components_total, num_components_to_plot)
+    components = list(range(num_components))
+    combinations = [(i, j) for i in components for j in components if i < j]
+
+    # Setup subplot grid
+    n_plots = len(combinations)
+    n_cols = 3
+    n_rows = (n_plots + n_cols - 1) // n_cols
+
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(5 * n_cols, 4 * n_rows))
+    axes = axes.flatten()
+
+    for idx, (i, j) in enumerate(combinations):
+        ax = axes[idx]
+        sns.scatterplot(
+            x=normalized_pca_components[:, i],
+            y=normalized_pca_components[:, j],
+            hue=all_labels,
+            palette=cluster_color_map,
+            s=60,
+            alpha=0.7,
+            ax=ax,
+            legend=False
+        )
+        ax.set_xlabel(f"PC {i + 1}")
+        ax.set_ylabel(f"PC {j + 1}")
+        ax.set_title(f"Principal Components {i + 1} & {j + 1}")
+
+    # Remove unused axes
+    for idx in range(len(combinations), len(axes)):
+        fig.delaxes(axes[idx])
+
+    # Create legend from unique labels
+    unique_labels = sorted(set(all_labels))
+    handles = [
+        plt.Line2D([0], [0], marker='o', color='w', label=f"Cluster {lbl} ({(df['Cluster'] == lbl).sum()} samples)",
+                   markerfacecolor=cluster_color_map[lbl], markersize=8)
+        for lbl in unique_labels
+    ]
+
+    fig.legend(
+        handles=handles,
+        title='Cluster',
+        loc='upper right',
+        bbox_to_anchor=(1.15, 1)
+    )
+
+    fig.suptitle(f"PCA + DPGMM Clustering with first {num_components} components", fontsize=16, y=1.02)
+    plt.tight_layout()
+
+    if save==True:
+        plt.savefig(save_dir, format='pdf', bbox_inches='tight')
+        plt.show()
+    else:
+        plt.show()
+
+# def plot_dpgmm_clusters(
+#     df,
+#     normalized_pca_components,
+#     all_labels,
+#     cluster_color_map,
+#     num_components_to_plot
+# ):
+#     # Add cluster labels to DataFrame
+#     df['Cluster'] = all_labels
+
+#     num_components_total = normalized_pca_components.shape[1]
+#     num_components = min(num_components_total, num_components_to_plot)
+#     components = list(range(num_components))
+#     combinations = [(i, j) for i in components for j in components if i < j]
+
+#     # Setup subplot grid
+#     n_plots = len(combinations)
+#     n_cols = 3
+#     n_rows = (n_plots + n_cols - 1) // n_cols
+
+#     fig = make_subplots(rows=n_rows, cols=n_cols, subplot_titles=[
+#         f"Principal Components {i + 1} & {j + 1}" for i, j in combinations
+#     ])
+
+#     # Scatter plot for each PCA component combination
+#     for idx, (i, j) in enumerate(combinations):
+#         row, col = divmod(idx, n_cols)
+
+#         for cluster_label in sorted(set(all_labels)):
+#             # cluster_mask = (df['Cluster'] == cluster_label)
+#             fig.add_trace(
+#                 go.Scatter(
+#                     x=normalized_pca_components[:, i],
+#                     y=normalized_pca_components[:, j],
+#                     mode="markers",
+#                     marker=dict(
+#                         color=cluster_color_map[cluster_label],  # Maintain same colors as sns
+#                         size=6,
+#                         opacity=0.7
+#                     ),
+#                     name=f"Cluster {cluster_label}",
+#                     legendgroup=str(cluster_label),
+#                     hoverinfo="text",
+#                     text=[f"Sample {idx}, Cluster {cluster_label}" for idx in range(len(df))]
+#                 ),
+#                 row=row + 1,
+#                 col=col + 1
+#             )
+
+#     # Layout adjustments
+#     fig.update_layout(
+#         title_text=f"PCA + DPGMM Clustering with first {num_components} components",
+#         showlegend=True,
+#         width=1000,
+#         height=600
+#     )
+
+#     fig.show()
 
 
-
-
+    
 
     # # Plot
     # plt.figure(figsize=(30, 6))
