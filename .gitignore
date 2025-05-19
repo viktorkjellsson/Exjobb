@@ -4,7 +4,7 @@ notebooks/txt
 configs/txt_configs/filelist.txt
 *.pyc
 *.pth
-tests/dataset_test.ipynb
+tests/
 output/logs
 output/figures
 models/logs/

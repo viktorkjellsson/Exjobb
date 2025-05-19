@@ -1,6 +1,0 @@
-from pathlib import Path
-import sys
-
-# Add project root to sys.path
-sys.path.append(str(Path(__file__).resolve().parents[2]))  # Go up the number of level to get to root directory, i.e. user/documents/Exjobb/ (in this case two)
-from configs.path_config import BASE_DIR, EXTRACTED_DATA_DIR, RAW_DATA_DIR
