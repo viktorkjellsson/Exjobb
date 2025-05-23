@@ -6,7 +6,7 @@ configs/txt_configs/filelist.txt
 *.pth
 tests/
 output/logs
-output/figures
+# output/figures
 models/logs/
 notebooks/outputs
 data/extracted/

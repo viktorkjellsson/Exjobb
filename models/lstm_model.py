@@ -57,7 +57,6 @@ import json
 # Add the root project directory to the Python path
 ROOT = Path.cwd().parent  # This will get the project root since the notebook is in 'notebooks/'
 sys.path.append(str(ROOT))
-from configs.path_config import LOGS_DIR
 from src.train_logger import TrainingLogger
 
 
