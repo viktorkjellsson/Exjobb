@@ -99,15 +99,16 @@ def gmm_clustering(normalized_pca_components, df, n_clusters):
         legend='full'
     )
 
-    plt.xlabel("PCA Component 1")
-    plt.ylabel("PCA Component 2")
-    plt.title("GMM Clustering on PCA Components")
+    plt.xlabel("PC 1")
+    plt.ylabel("PC 2")
+    plt.title("GMM Clustering on Principal Components")
 
     handles, labels = ax.get_legend_handles_labels()
     label_counts = pd.Series(clusters).value_counts().sort_index()
     new_labels = [f"Cluster {int(lbl)} ({label_counts[int(lbl)]} samples)" if lbl.isdigit() else lbl for lbl in labels]
 
     ax.legend(handles=handles, labels=new_labels, title='Cluster', loc='upper right')
+    plt.savefig("gmm_clustering.pdf", format='pdf')    
     plt.show()
 
     return data_with_gmm, cluster_color_map
