@@ -107,7 +107,7 @@ itertools
 operator
 
 Installed libraries used:
-# Name                    Version
+Name                      Version
 json                      0.10.0
 numpy                     2.1.3
 pandas                    2.2.3
