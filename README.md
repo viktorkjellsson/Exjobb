@@ -87,3 +87,34 @@ src/
         shift_region.py
         shift_segments.py
         utils.py: Contains a set of tools for test/evaluation
+
+
+Python verision:	3.12.9
+
+Preinstalled libraries used: 
+pathlib
+tqdm
+sys
+numpy
+json
+pickle
+csv
+collections
+datetime
+tkinter
+time
+itertools
+operator
+
+Installed libraries used:
+# Name                    Version
+json                      0.10.0
+numpy                     2.1.3
+pandas                    2.2.3
+plotly                    5.24.1
+pytorch                   2.5.1
+scikit-learn              1.6.1
+scipy                     1.15.3
+seaborn                   0.13.2
+statsmodels               0.14.4
+tqdm                      4.67.1
